@@ -6,11 +6,13 @@ Solución para el Hackatón **TRANSFORMAGOB 2026** — Desafío OGTIC DP.
 
 ## Propuesta
 
-Plataforma web ligera (PWA) + chatbot conversacional (web y WhatsApp) que permite a cualquier ciudadano:
+Web app desplegada en **Vercel** que se conecta a la API de consulta de expedientes del Despacho Presidencial y permite a cualquier ciudadano:
 
 1. Consultar el estado de su expediente en tiempo real (expediente + clave).
 2. Recibir orientación guiada sobre requisitos de trámites del TUPA.
-3. Acceder desde cualquier dispositivo, sin instalar apps pesadas.
+3. Acceder desde cualquier dispositivo con navegador, sin instalar nada.
+
+Ver [`docs/PRD.md`](docs/PRD.md) para el documento de producto del MVP.
 
 ## Estructura del repositorio
 
@@ -24,12 +26,13 @@ proyecto/
 └── infra/           # Docker, scripts de despliegue
 ```
 
-## Stack propuesto
+## Stack
 
-- **Frontend:** Next.js 14 + Tailwind + shadcn/ui (accesible, AA WCAG)
-- **Backend:** Node.js + Express + TypeScript
-- **Chatbot:** Motor de intents propio + integración WhatsApp Business API
-- **Datos:** Mock JSON provisto por el lab del DP
+- **Hosting:** Vercel (despliegue continuo desde `main`)
+- **Frontend + API:** Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui
+- **Capa intermedia:** Route Handlers de Next.js (`app/api/*`) sobre Vercel Functions
+- **Chatbot:** Motor de intents propio (sin dependencias externas en el MVP)
+- **Datos:** API de consulta de expedientes del Despacho Presidencial + JSON estático del TUPA
 
 ## Equipo
 
