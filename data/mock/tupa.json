@@ -1,0 +1,15 @@
+{
+  "tramites": [
+    {
+      "codigo": "DP-001",
+      "nombre": "Solicitud de audiencia presidencial",
+      "requisitos": [
+        "Carta de solicitud dirigida al Despacho Presidencial",
+        "Copia de DNI",
+        "Sustento del motivo de la audiencia"
+      ],
+      "plazo": "30 días hábiles",
+      "costo": "Gratuito"
+    }
+  ]
+}

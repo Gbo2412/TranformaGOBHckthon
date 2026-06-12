@@ -1,0 +1,27 @@
+{
+  "intents": [
+    {
+      "id": "consultar_estado",
+      "ejemplos": [
+        "quiero saber el estado de mi expediente",
+        "como va mi tramite",
+        "consultar expediente"
+      ],
+      "flujo": "flujo-consulta-expediente"
+    },
+    {
+      "id": "requisitos_tramite",
+      "ejemplos": [
+        "que necesito para presentar una solicitud",
+        "requisitos de tramite",
+        "documentos necesarios"
+      ],
+      "flujo": "flujo-orientacion-tupa"
+    },
+    {
+      "id": "saludo",
+      "ejemplos": ["hola", "buenos dias", "buenas"],
+      "flujo": "flujo-bienvenida"
+    }
+  ]
+}

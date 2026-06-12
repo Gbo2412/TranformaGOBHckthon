@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expediente",
+  "type": "object",
+  "required": ["numero", "estado"],
+  "properties": {
+    "numero": { "type": "string" },
+    "clave": { "type": "string" },
+    "ciudadano": { "type": "string" },
+    "tramite": { "type": "string" },
+    "estado": {
+      "type": "string",
+      "enum": ["INGRESADO", "EN TRAMITE", "OBSERVADO", "ATENDIDO", "ARCHIVADO"]
+    },
+    "ultimaActualizacion": { "type": "string", "format": "date-time" },
+    "historial": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fecha": { "type": "string", "format": "date" },
+          "evento": { "type": "string" }
+        }
+      }
+    }
+  }
+}
