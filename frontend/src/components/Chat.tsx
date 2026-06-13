@@ -12,19 +12,21 @@ interface Message {
   role: Role;
   content: string;
   tone?: Tone;
+  chips?: string[];
 }
+
+const WELCOME_CHIPS = [
+  "Consultar el estado de un expediente",
+  "Conocer sobre un trámite",
+  "Otra consulta sobre el Despacho Presidencial",
+];
 
 const WELCOME: Message = {
   role: "assistant",
   content:
     "¡Hola! 👋 Bienvenido al Asistente del Despacho Presidencial.\n\nTe puedo ayudar con:\n\n- **Estado de tu expediente** — saber en qué va tu trámite en tiempo real (necesitarás tu número y clave).\n- **Información de trámites** — requisitos, plazos y costos de Solicitud Simple, Acceso a la Información Pública (SAIP) y Reclamo.\n- **Otras consultas** — horarios, ubicación de mesa de partes o cualquier duda sobre la entidad.\n\nCuéntame, ¿en qué te ayudo?",
+  chips: WELCOME_CHIPS,
 };
-
-const QUICK_REPLIES = [
-  "Consultar el estado de un expediente",
-  "Conocer sobre un trámite",
-  "Otra consulta sobre el Despacho Presidencial",
-];
 
 function isFirstInAssistantSequence(messages: Message[], index: number): boolean {
   if (messages[index].role !== "assistant") return false;
@@ -49,7 +51,9 @@ export function Chat() {
     const content = text.trim();
     if (!content || pending) return;
 
-    const historyForApi = messages.filter((m) => m.role !== "system");
+    const historyForApi = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({ role: m.role, content: m.content }));
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
     setInput("");
@@ -69,7 +73,8 @@ export function Chat() {
       const reply =
         data.respuesta ??
         "Disculpa, no pude procesar tu consulta. Intenta de nuevo en un momento.";
-      setMessages([...next, { role: "assistant", content: reply }]);
+      const chips = Array.isArray(data.chips) ? data.chips : undefined;
+      setMessages([...next, { role: "assistant", content: reply, chips }]);
     } catch {
       setMessages([
         ...next,
@@ -90,6 +95,13 @@ export function Chat() {
     setMessages((prev) => prev.filter((m) => m.role !== "system"));
     send(lastUser.content);
   }
+
+  const lastMessage = messages[messages.length - 1];
+  const showChips =
+    !pending &&
+    lastMessage?.role === "assistant" &&
+    Array.isArray(lastMessage.chips) &&
+    lastMessage.chips.length > 0;
 
   return (
     <div className="flex h-full flex-col bg-surface-page">
@@ -148,22 +160,11 @@ export function Chat() {
 
           {pending && <TypingBubble />}
 
-          {messages.length === 1 && (
-            <div
-              role="group"
-              aria-label="Sugerencias rápidas"
-              className="mt-2 flex flex-wrap gap-2"
-            >
-              {QUICK_REPLIES.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => send(q)}
-                  className="min-h-[44px] rounded-full border border-line bg-surface-muted px-4 py-2 text-sm text-ink-secondary transition hover:border-brand-700 hover:text-brand-700"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
+          {showChips && (
+            <ChipsRow
+              chips={lastMessage.chips!}
+              onPick={(text) => send(text)}
+            />
           )}
         </div>
       </div>
@@ -208,6 +209,32 @@ export function Chat() {
           No compartas datos personales más allá de los necesarios para tu consulta.
         </p>
       </footer>
+    </div>
+  );
+}
+
+function ChipsRow({
+  chips,
+  onPick,
+}: {
+  chips: string[];
+  onPick: (text: string) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Sugerencias rápidas"
+      className="mt-2 flex flex-wrap gap-2"
+    >
+      {chips.map((q) => (
+        <button
+          key={q}
+          onClick={() => onPick(q)}
+          className="min-h-[44px] rounded-full border border-line bg-surface-muted px-4 py-2 text-sm text-ink-secondary transition hover:border-brand-700 hover:text-brand-700"
+        >
+          {q}
+        </button>
+      ))}
     </div>
   );
 }
