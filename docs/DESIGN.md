@@ -1,7 +1,9 @@
-# Plan de Diseño — Asistente DP
+# Sistema Visual y Accesibilidad — Asistente DP
 
-**Versión 1.0 · 2026-06-13**
-Basado en PRD v2.0 (chat-only) y en la paleta oficial del Sistema de Diseño del Estado Peruano ([gob.pe](https://guias.servicios.gob.pe/creacion-servicios-digitales/estilos/colores)).
+**Versión 2.0 · 2026-06-13**
+Basado en PRD v3.0 (chat-only) y en la paleta oficial del Sistema de Diseño del Estado Peruano ([gob.pe](https://guias.servicios.gob.pe/creacion-servicios-digitales/estilos/colores)).
+
+> **Changelog v2.0:** Documenta lo que efectivamente está en producción. Agregadas §5.9 (chips contextuales) y §5.10 (markdown rendering). §8 matriz de estados actualizada al comportamiento real. §9 marcado como completado.
 
 ---
 
@@ -243,10 +245,58 @@ Cuando el agente confirma envío exitoso, se muestra una **burbuja sistema** cen
 
 ### 6.6 Form input
 
-- [ ] Textarea con `<label>` (visible o `sr-only`).
-- [ ] Placeholder NUNCA sustituye al label.
-- [ ] Sin `autocomplete` agresivo en clave de expediente (`autocomplete="off"`).
-- [ ] No persistir input en localStorage.
+- [x] Textarea con `<label>` (visible o `sr-only`).
+- [x] Placeholder NUNCA sustituye al label.
+- [x] Sin `autocomplete` agresivo en clave de expediente (`autocomplete="off"`).
+- [x] No persistir input en localStorage.
+
+---
+
+### 5.9 Chips contextuales (post-respuesta)
+
+Aparecen debajo del **último mensaje del asistente** cuando este sugiere acciones rápidas. Implementan la convención `[CHIPS: …]` documentada en [`AGENT.md §6`](./AGENT.md).
+
+**Comportamiento:**
+- Solo se renderizan en el **último** mensaje del asistente; al enviar un nuevo turno, los chips viejos desaparecen.
+- Click envía el texto del chip como si el ciudadano lo hubiera tecleado.
+- En la **bienvenida** los chips son hardcoded (`WELCOME_CHIPS` en `Chat.tsx`); en turnos posteriores vienen del backend (`data.chips`).
+
+**Especificación visual:**
+
+| Propiedad | Valor |
+|---|---|
+| Forma | `rounded-full` (pill) |
+| Altura mínima | 44px (área de toque accesible) |
+| Padding | `px-4 py-2` |
+| Fondo | `surface-muted` (#EEF3FB) |
+| Borde | 1px `border-line` (#DEE3EA) |
+| Texto | `text-sm` · `text-ink-secondary` (#3D4053) |
+| Hover | borde y texto pasan a `brand-700` (#DC362E) |
+| Focus | anillo `focus-ring` 3px con offset 2px (heredado de globals) |
+| Layout | `flex-wrap gap-2` — chips bajan a la línea siguiente si no caben |
+| Container | `role="group"` + `aria-label="Sugerencias rápidas"` |
+
+**Cantidad esperada:** 2 a 4 chips. Cada uno ≤ 6 palabras / 60 caracteres (el endpoint filtra los que superan ese límite).
+
+### 5.10 Markdown rendering en burbujas del asistente
+
+Las burbujas del asistente renderizan markdown con `react-markdown` + `remark-breaks`. Las del usuario son texto plano (no se parsea por seguridad y previsibilidad).
+
+**Tags soportados y su mapping a tokens:**
+
+| Markdown | Componente Tailwind |
+|---|---|
+| `**negrita**` | `<strong class="font-semibold text-ink-primary">` |
+| `*itálica*` | `<em class="italic">` |
+| `- lista` | `<ul class="my-2 list-disc space-y-1 pl-5">` |
+| `1. lista` | `<ol class="my-2 list-decimal space-y-1 pl-5">` |
+| `---` | `<hr class="my-3 border-line">` |
+| `[texto](url)` y mailto auto | `<a class="text-accent-user underline">` — `target=_blank rel=noopener` solo en http(s) externos |
+| `` `código` `` | `<code class="bg-surface-muted px-1.5 py-0.5">` |
+| `# / ## / ###` | Render como `<p class="font-semibold">` (no jerarquía visual de h1/h2/h3 — uniformamos) |
+| `\n` simple | Se convierte en `<br>` gracias a `remark-breaks` |
+
+**Por qué solo el asistente**: el ciudadano no envía markdown intencional; renderizar su texto como markdown abre vector de injection visual (ej. el ciudadano escribe `**hola**` y lo vería en negrita en su propia burbuja, lo cual confunde).
 
 ---
 
@@ -284,31 +334,36 @@ theme: {
 
 | Momento | Lo que ve el usuario | Componentes activos |
 |---|---|---|
-| **Cold start** | Header + 1 mensaje de bienvenida + 3 quick replies | Header, burbuja asistente, chips |
+| **Cold start** | Header + bienvenida con 3 bullets (capacidades) + 3 chips hardcoded debajo | Header, burbuja asistente con markdown, ChipsRow |
 | **Esperando primer input** | Igual + cursor en textarea | + foco visible en textarea |
-| **Usuario escribió, esperando respuesta** | Burbuja usuario + indicador "escribiendo" | + typing bubble |
-| **Asistente pide expediente** | Burbujas en secuencia | — |
-| **Asistente pide clave** | Burbujas en secuencia | — |
-| **Resultado entregado** | Burbuja con datos + badge de estado coloreado | + opción de envío por correo |
-| **Envío por correo OK** | Burbuja sistema verde "✓ Enviado a…" | + nueva ronda de quick replies opcionales |
-| **Error de API** | Burbuja del asistente con mensaje humano | — |
-| **Sin red** | Burbuja sistema roja "Sin conexión. Reintenta." | botón "Reintentar" inline |
+| **Usuario escribió, esperando respuesta** | Burbuja usuario + indicador "escribiendo" | + TypingBubble (3 dots) |
+| **Asistente pide expediente** | Burbuja del asistente con ejemplo de formato | — |
+| **Asistente pide clave** | Burbuja del asistente con explicación de qué es la clave | — |
+| **Resultado de expediente entregado** | Burbuja con plantilla markdown estructurada (Número, Trámite, Titular, Estado, etc.) + ChipsRow con chips contextuales | Bubble + ChipsRow |
+| **Información de trámite entregada** | Burbuja con plantilla TUPA (DP-XXX, Requisitos, Plazo, Costo, Canal) + ChipsRow con los otros 2 trámites + "Consultar mi expediente" | Bubble + ChipsRow |
+| **Respuesta en quechua** | Misma estructura, todas las palabras del asistente en runasimi; valores del API quedan en español | Igual |
+| **Mensaje único en aymara** | Una sola burbuja en aymara con teléfono de contacto, sin chips ni siguiente pregunta | Bubble |
+| **Error de API (404/401/502)** | Burbuja del asistente con mensaje humano (no código HTTP) | — |
+| **Sin red (fetch falla)** | SystemBubble roja "Sin conexión. Verifica tu internet." con botón "Reintentar" que reenvía último mensaje del usuario | SystemBubble con `tone="danger"` |
 
 ---
 
-## 9. Cambios pendientes en código
+## 9. Cambios completados (estado de implementación)
 
-1. **`tailwind.config.ts`** — reemplazar tokens actuales (genéricos) por los de §7.
-2. **`layout.tsx`** — agregar `next/font/google` con Inter + variable CSS.
-3. **`globals.css`** — declarar `--focus-ring`, agregar `@media (prefers-reduced-motion: reduce)` para desactivar animaciones.
-4. **`Chat.tsx`** — actualizar:
-   - Colores: header con borde inferior en lugar de fondo brand.
-   - Burbujas: usar `accent.user` (azul) en lugar de `brand` (rojo).
-   - Aria: agregar `role="log"`, `aria-live="polite"` en el contenedor, `aria-label` en burbujas y botón.
-   - Avatar del asistente: render condicional en primer mensaje de la secuencia.
-   - Badge de estado: helper para colorear según §2.3.
-   - Disclaimer footer: `text-xs text-text-muted`.
-5. **Estados especiales**: nuevos componentes `<SystemBubble />` para errores de red y confirmaciones de correo.
+Todos los puntos del plan original están en producción:
+
+- [x] **`tailwind.config.ts`** con tokens gob.pe (brand, surface, ink, line, accent, state, focus ring, bubble radius).
+- [x] **`layout.tsx`** con Inter cargada vía `next/font/google` y variable `--font-inter`.
+- [x] **`globals.css`** con `:focus-visible` global (3px offset 2px), `@media (prefers-reduced-motion: reduce)` y `.tabular` para dígitos.
+- [x] **`Chat.tsx`** — header con borde inferior, burbujas usuario en `accent-user`, burbujas asistente con render markdown, avatar condicional, aria-live, role=log, autocomplete=off en textarea, disclaimer en footer.
+- [x] **`SystemBubble.tsx`** para errores de red (`danger`) y confirmaciones (`success`/`info`).
+- [x] **Markdown rendering** con `react-markdown` + `remark-breaks` (§5.10).
+- [x] **Chips contextuales** post-respuesta (§5.9).
+- [x] **Soporte de quechua** en el flujo conversacional (texto y plantillas).
+
+Lo único pendiente (no es de diseño sino de integración):
+
+- [ ] Envío real de correo (CU-06 / `enviar_resultado_por_correo` hoy es stub, ver [`API.md §3`](./API.md)).
 
 ---
 
@@ -319,7 +374,7 @@ theme: {
 - Animación de entrada de burbujas tipo iMessage.
 - Avatar con foto institucional vs. monograma.
 - Tema de alto contraste manual (más allá del soporte de SO).
-- Internacionalización (quechua, aimara).
+- Soporte total de más lenguas originarias (hoy quechua completo, aymara solo derivación).
 
 ---
 
