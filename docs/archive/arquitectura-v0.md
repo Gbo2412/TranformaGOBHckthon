@@ -1,4 +1,10 @@
-# Arquitectura — DP Consulta 24/7
+# [Archivado] Arquitectura — DP Consulta 24/7 (v0)
+
+> ⚠️ **Este documento está obsoleto.** Describe la arquitectura inicial planeada (Express + Next.js separados, app PWA + WhatsApp) que fue descartada antes de la implementación. La arquitectura actual está en [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
+>
+> Se conserva como histórico de la idea original.
+
+---
 
 ## Diagrama de alto nivel
 
