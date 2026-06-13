@@ -51,6 +51,53 @@ export const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+const TZ_LIMA = "America/Lima";
+
+function formatoLimaCorto(date: Date): string {
+  return new Intl.DateTimeFormat("es-PE", {
+    timeZone: TZ_LIMA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function fechaLimaISO(date: Date): string {
+  // YYYY-MM-DD en zona Lima — útil para comparar días sin desfase horario
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ_LIMA,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function humanizarFechaLima(raw: string): string {
+  if (!raw) return "";
+  // API DP devuelve "YYYY-MM-DD HH:MM:SS" en UTC. Lo parseamos forzando 'Z'.
+  const date = new Date(raw.replace(" ", "T") + "Z");
+  if (Number.isNaN(date.getTime())) return raw;
+
+  const ahora = new Date();
+  const diaTimestamp = fechaLimaISO(date);
+  const diaHoy = fechaLimaISO(ahora);
+  const diaAyer = fechaLimaISO(new Date(ahora.getTime() - 24 * 60 * 60 * 1000));
+
+  const hhmm = formatoLimaCorto(date);
+
+  if (diaTimestamp === diaHoy) return `hoy a las ${hhmm}`;
+  if (diaTimestamp === diaAyer) return `ayer a las ${hhmm}`;
+
+  const fechaLarga = new Intl.DateTimeFormat("es-PE", {
+    timeZone: TZ_LIMA,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+
+  return `el ${fechaLarga} a las ${hhmm}`;
+}
+
 async function consultarExpediente(expediente: string, clave: string): Promise<unknown> {
   try {
     const res = await fetch(DP_API_URL, {
@@ -77,7 +124,7 @@ async function consultarExpediente(expediente: string, clave: string): Promise<u
       administrado: d.administrado,
       estadoActual: d.estado_actual,
       detalleEstado: d.detalle_estado,
-      ultimaActualizacion: d.ultima_actualizacion,
+      ultimaActualizacion: humanizarFechaLima(d.ultima_actualizacion),
       tiempoEstimadoDias: d.tiempo_estimado_resolucion_dias,
     };
   } catch {
