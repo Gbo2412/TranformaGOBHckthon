@@ -123,14 +123,14 @@ export function ChatWidget() {
       return;
     }
 
-    // Flujo general — chatbot por keywords
+    // Flujo general — Claude con historial
     agregarMensajeUsuario(texto);
     setCargando(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ mensaje: texto }),
+        body: JSON.stringify({ mensaje: texto, historial: mensajes }),
       });
       const data = await res.json();
       agregarMensajeBot(data.texto, data.opciones);
