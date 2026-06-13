@@ -59,7 +59,7 @@ export function ConsultaForm({ onResultado }: Props) {
         <input
           id="expediente"
           type="text"
-          placeholder="Ej: 2026-0010582"
+          placeholder="Ej: 2026-0001234"
           value={expediente}
           onChange={(e) => setExpediente(e.target.value)}
           className="border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -74,7 +74,7 @@ export function ConsultaForm({ onResultado }: Props) {
         <input
           id="clave"
           type="text"
-          placeholder="Ej: 4176"
+          placeholder="Ej: 1234"
           value={clave}
           onChange={(e) => setClave(e.target.value)}
           className="border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
