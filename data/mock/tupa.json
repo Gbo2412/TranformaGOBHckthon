@@ -1,15 +1,54 @@
 {
+  "fuente": "TUPA del Despacho Presidencial — DS N° 062-2010-PCM modificado por RM N° 272-2017-PCM",
   "tramites": [
     {
       "codigo": "DP-001",
-      "nombre": "Solicitud de audiencia presidencial",
+      "nombre": "Solicitud Simple",
+      "descripcion": "Documento mediante el cual el ciudadano presenta una petición, requerimiento o comunicación dirigida al Despacho Presidencial.",
       "requisitos": [
-        "Carta de solicitud dirigida al Despacho Presidencial",
-        "Copia de DNI",
-        "Sustento del motivo de la audiencia"
+        "Nombres y apellidos completos del solicitante.",
+        "Número de DNI u otro documento de identificación.",
+        "Dirección domiciliaria.",
+        "Correo electrónico para recibir comunicaciones.",
+        "Petitorio o pedido expresado de manera clara y precisa.",
+        "Firma del solicitante.",
+        "En caso de adjuntar documentos, detallar expresamente la relación de anexos."
       ],
       "plazo": "30 días hábiles",
-      "costo": "Gratuito"
+      "base_legal": "TUO de la Ley N.° 27444 — Ley del Procedimiento Administrativo General",
+      "costo": "Gratuito",
+      "canal": "Mesa de Partes — Jr. de la Unión N° 264, Edificio Palacio, Cercado de Lima"
+    },
+    {
+      "codigo": "DP-002",
+      "nombre": "Solicitud de Acceso a la Información Pública (SAIP)",
+      "descripcion": "Permite a cualquier ciudadano solicitar información pública que posea el Despacho Presidencial, conforme a la normativa de transparencia.",
+      "requisitos": [
+        "Nombres y apellidos completos.",
+        "Número de documento de identidad y domicilio.",
+        "Expresión concreta y precisa del pedido de información.",
+        "Indicar la modalidad de entrega: copia simple, copia certificada, correo electrónico u otro medio permitido.",
+        "Firma o huella digital (solo para presentación presencial; no exigible por otros canales)."
+      ],
+      "plazo": "10 días hábiles desde el día siguiente de presentada la solicitud",
+      "silencio_administrativo": "Negativo",
+      "base_legal": "Ley N.° 27806, DS N° 043-2003-PCM, DS N° 070-2013-PCM, DL N° 1353 — RM N° 272-2017-PCM",
+      "costo": "Gratuito para la solicitud. Reproducción: S/ 0.084 por cara (copia simple o certificada, impresión simple o certificada).",
+      "canal": "Correo: accesoinf@presidencia.gob.pe · Mesa de Partes — Jr. de la Unión N° 264, Edificio Palacio, Cercado de Lima"
+    },
+    {
+      "codigo": "DP-003",
+      "nombre": "Reclamo",
+      "descripcion": "Mecanismo mediante el cual el ciudadano expresa su disconformidad respecto de la atención recibida o del incumplimiento de obligaciones de la entidad.",
+      "requisitos": [
+        "Número de DNI, pasaporte o carné de extranjería.",
+        "Dirección, número telefónico y correo electrónico.",
+        "Descripción detallada del reclamo: hechos, fecha, hora (de ser posible) y motivo de disconformidad."
+      ],
+      "plazo": "30 días hábiles",
+      "base_legal": "TUO de la Ley N.° 27444 — Ley del Procedimiento Administrativo General",
+      "costo": "Gratuito",
+      "canal": "Mesa de Partes — Jr. de la Unión N° 264, Edificio Palacio, Cercado de Lima"
     }
   ]
 }
