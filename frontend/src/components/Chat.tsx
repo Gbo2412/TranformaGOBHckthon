@@ -17,9 +17,15 @@ const WELCOME: Message = {
 
 const QUICK_REPLIES = [
   "Consultar mi expediente",
-  "¿Qué necesito para una Solicitud Simple?",
+  "Requisitos de una Solicitud Simple",
   "Horarios de mesa de partes",
 ];
+
+function isFirstInAssistantSequence(messages: Message[], index: number): boolean {
+  if (messages[index].role !== "assistant") return false;
+  if (index === 0) return true;
+  return messages[index - 1].role !== "assistant";
+}
 
 export function Chat() {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
@@ -73,42 +79,50 @@ export function Chat() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex h-full flex-col bg-surface-page">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface-card px-4 py-3">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white">
+          <div
+            aria-hidden="true"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-700 text-white"
+          >
             <span className="text-sm font-bold">DP</span>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
               Despacho Presidencial
             </p>
-            <h1 className="text-base font-semibold text-slate-900">
+            <h1 className="text-lg font-semibold text-ink-primary">
               Asistente de expedientes
             </h1>
           </div>
         </div>
       </header>
 
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-6"
-        aria-live="polite"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
           {messages.map((m, i) => (
-            <Bubble key={i} role={m.role} content={m.content} />
+            <Bubble
+              key={i}
+              role={m.role}
+              content={m.content}
+              showAvatar={isFirstInAssistantSequence(messages, i)}
+            />
           ))}
 
           {pending && <TypingBubble />}
 
           {messages.length === 1 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div
+              role="group"
+              aria-label="Sugerencias rápidas"
+              className="mt-2 flex flex-wrap gap-2"
+            >
               {QUICK_REPLIES.map((q) => (
                 <button
                   key={q}
                   onClick={() => send(q)}
-                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-brand hover:text-brand"
+                  className="min-h-[44px] rounded-full border border-line bg-surface-muted px-4 py-2 text-sm text-ink-secondary transition hover:border-brand-700 hover:text-brand-700"
                 >
                   {q}
                 </button>
@@ -118,7 +132,7 @@ export function Chat() {
         </div>
       </div>
 
-      <footer className="border-t border-slate-200 bg-white px-4 py-3">
+      <footer className="border-t border-line bg-surface-card px-4 py-3">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -127,7 +141,7 @@ export function Chat() {
           className="mx-auto flex max-w-2xl items-end gap-2"
         >
           <label htmlFor="chat-input" className="sr-only">
-            Mensaje
+            Mensaje para el asistente
           </label>
           <textarea
             id="chat-input"
@@ -142,17 +156,19 @@ export function Chat() {
             placeholder="Escríbele al asistente…"
             rows={1}
             disabled={pending}
-            className="min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:opacity-60"
+            autoComplete="off"
+            className="tabular min-h-[44px] flex-1 resize-none rounded-2xl border border-line bg-surface-card px-4 py-3 text-base text-ink-primary outline-none placeholder:text-ink-muted focus:border-accent-user disabled:opacity-60"
           />
           <button
             type="submit"
+            aria-label="Enviar mensaje"
             disabled={pending || !input.trim()}
-            className="h-11 shrink-0 rounded-full bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 shrink-0 rounded-full bg-accent-user px-5 text-sm font-semibold text-white transition hover:bg-accent-userHover disabled:cursor-not-allowed disabled:opacity-50"
           >
             Enviar
           </button>
         </form>
-        <p className="mx-auto mt-2 max-w-2xl text-center text-xs text-slate-400">
+        <p className="mx-auto mt-2 max-w-2xl text-center text-xs text-ink-muted">
           No compartas datos personales más allá de los necesarios para tu consulta.
         </p>
       </footer>
@@ -160,16 +176,43 @@ export function Chat() {
   );
 }
 
-function Bubble({ role, content }: { role: Role; content: string }) {
+function Bubble({
+  role,
+  content,
+  showAvatar,
+}: {
+  role: Role;
+  content: string;
+  showAvatar: boolean;
+}) {
   const isUser = role === "user";
+
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div
+          aria-label="Tu mensaje"
+          className="tabular max-w-[85%] whitespace-pre-wrap rounded-bubble rounded-br-md bg-accent-user px-4 py-3 text-base text-white"
+        >
+          {content}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className="flex items-end gap-2">
       <div
-        className={
-          isUser
-            ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-brand px-4 py-3 text-base text-white"
-            : "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3 text-base text-slate-800 shadow-sm"
-        }
+        aria-hidden="true"
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white ${
+          showAvatar ? "" : "invisible"
+        }`}
+      >
+        DP
+      </div>
+      <div
+        aria-label="Mensaje del asistente"
+        className="tabular max-w-[85%] whitespace-pre-wrap rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 text-base text-ink-primary shadow-sm"
       >
         {content}
       </div>
@@ -179,8 +222,18 @@ function Bubble({ role, content }: { role: Role; content: string }) {
 
 function TypingBubble() {
   return (
-    <div className="flex justify-start">
-      <div className="flex max-w-[85%] items-center gap-1 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div
+      aria-live="polite"
+      aria-label="El asistente está escribiendo"
+      className="flex items-end gap-2"
+    >
+      <div
+        aria-hidden="true"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white"
+      >
+        DP
+      </div>
+      <div className="flex max-w-[85%] items-center gap-1 rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 shadow-sm">
         <Dot />
         <Dot delay="0.15s" />
         <Dot delay="0.3s" />
@@ -192,7 +245,7 @@ function TypingBubble() {
 function Dot({ delay = "0s" }: { delay?: string }) {
   return (
     <span
-      className="inline-block h-2 w-2 animate-bounce rounded-full bg-slate-400"
+      className="inline-block h-2 w-2 animate-bounce rounded-full bg-ink-muted"
       style={{ animationDelay: delay }}
     />
   );
