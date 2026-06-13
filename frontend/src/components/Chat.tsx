@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SystemBubble } from "./SystemBubble";
 
-type Role = "user" | "assistant";
+type Role = "user" | "assistant" | "system";
+type Tone = "info" | "success" | "danger";
 
 interface Message {
   role: Role;
   content: string;
+  tone?: Tone;
 }
 
 const WELCOME: Message = {
@@ -44,6 +47,7 @@ export function Chat() {
     const content = text.trim();
     if (!content || pending) return;
 
+    const historyForApi = messages.filter((m) => m.role !== "system");
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
     setInput("");
@@ -55,7 +59,7 @@ export function Chat() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           mensaje: content,
-          history: next.slice(0, -1),
+          history: historyForApi,
         }),
       });
 
@@ -68,14 +72,21 @@ export function Chat() {
       setMessages([
         ...next,
         {
-          role: "assistant",
-          content:
-            "Tuvimos un problema de conexión. Verifica tu internet e intenta de nuevo.",
+          role: "system",
+          tone: "danger",
+          content: "Sin conexión. Verifica tu internet.",
         },
       ]);
     } finally {
       setPending(false);
     }
+  }
+
+  function retryLastUser() {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUser) return;
+    setMessages((prev) => prev.filter((m) => m.role !== "system"));
+    send(lastUser.content);
   }
 
   return (
@@ -108,14 +119,30 @@ export function Chat() {
         className="flex-1 overflow-y-auto px-4 py-6"
       >
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
-          {messages.map((m, i) => (
-            <Bubble
-              key={i}
-              role={m.role}
-              content={m.content}
-              showAvatar={isFirstInAssistantSequence(messages, i)}
-            />
-          ))}
+          {messages.map((m, i) => {
+            if (m.role === "system") {
+              return (
+                <SystemBubble
+                  key={i}
+                  tone={m.tone ?? "info"}
+                  message={m.content}
+                  action={
+                    m.tone === "danger"
+                      ? { label: "Reintentar", onClick: retryLastUser }
+                      : undefined
+                  }
+                />
+              );
+            }
+            return (
+              <Bubble
+                key={i}
+                role={m.role}
+                content={m.content}
+                showAvatar={isFirstInAssistantSequence(messages, i)}
+              />
+            );
+          })}
 
           {pending && <TypingBubble />}
 
@@ -188,7 +215,7 @@ function Bubble({
   content,
   showAvatar,
 }: {
-  role: Role;
+  role: "user" | "assistant";
   content: string;
   showAvatar: boolean;
 }) {
