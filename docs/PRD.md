@@ -1,7 +1,7 @@
 # PRD — Consulta de Expedientes Despacho Presidencial (MVP)
 
 **Hackatón TRANSFORMAGOB 2026 · OGTIC DP**
-Versión 1.0 — 2026-06-12
+Versión 1.1 — 2026-06-12
 Owner: Equipo OGTIC DP · Punto focal: German Canaza Torres
 
 ---
@@ -10,7 +10,7 @@ Owner: Equipo OGTIC DP · Punto focal: German Canaza Torres
 
 Plataforma web pública que permite a cualquier ciudadano consultar el estado de su expediente ante el Despacho Presidencial y recibir orientación sobre trámites del TUPA, 24/7, desde cualquier dispositivo con navegador, sin instalar nada.
 
-Para el MVP de 48 horas se entrega una **web app desplegada en Vercel** que consume la **API de consulta de expedientes** provista por el Despacho Presidencial.
+Para el MVP de 48 horas se entrega una **web app desplegada en Vercel** (Next.js full-stack) que consume la **API de consulta de expedientes** provista por el Despacho Presidencial.
 
 ---
 
@@ -50,13 +50,13 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | ID | Caso de uso | Prioridad |
 |---|---|---|
 | CU-01 | Consultar estado de expediente con número + clave | **P0** |
-| CU-02 | Ver historial / línea de tiempo del expediente | **P0** |
+| CU-02 | Ver detalle del estado, tiempo estimado de resolución y nombre del administrado | **P0** |
 | CU-03 | Consultar requisitos y plazos de un trámite del TUPA | **P1** |
 | CU-04 | Recibir orientación vía chatbot embebido (FAQ guiada) | **P1** |
 | CU-05 | Compartir el resultado de consulta (link o captura) | P2 |
 | CU-06 | Suscribirse a notificaciones por correo de cambios de estado | P2 |
 
-> Excluido del MVP: WhatsApp, app móvil nativa, login con cuenta gob.pe, descarga de constancias firmadas.
+> Excluido del MVP: WhatsApp, app móvil nativa, login con cuenta gob.pe, descarga de constancias firmadas, historial cronológico de eventos (la API del DP no lo provee en esta versión).
 
 ---
 
@@ -65,10 +65,10 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 ### Funcionalidades In-Scope
 
 1. **Página de inicio** con propuesta de valor y CTA de consulta.
-2. **Formulario de consulta**: campos `expediente` y `clave`, validación, envío.
-3. **Resultado de consulta**: estado actual, fecha última actualización, descripción del trámite, historial cronológico, próximo paso esperado.
+2. **Formulario de consulta**: campos `número de expediente` y `clave`, validación, envío.
+3. **Resultado de consulta**: estado actual (badge), nombre del administrado, descripción del trámite, detalle del estado, tiempo estimado de resolución, fecha de última actualización.
 4. **Manejo de errores**: expediente no encontrado, clave inválida, API caída, sin red.
-5. **Listado de trámites TUPA** (vista estática consultable): nombre, requisitos, plazo, costo.
+5. **Listado de trámites TUPA** (vista estática consultable): nombre, requisitos, plazo, costo, canal de atención.
 6. **Chatbot guiado** con flujos: consultar estado, ver requisitos, contactar mesa de partes.
 7. **Accesibilidad AA**: contraste, tamaños, navegación por teclado, lector de pantalla.
 8. **Responsive mobile-first** + funcionamiento en 3G.
@@ -82,6 +82,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 - Pasarela de pagos.
 - Panel administrativo para funcionarios del DP.
 - Notificaciones push.
+- Historial cronológico de eventos (no disponible en API actual del DP).
 
 ---
 
@@ -92,9 +93,9 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | **Disponibilidad** | 99% en horario 24/7 durante el piloto. |
 | **Performance** | LCP < 2.5s en 3G; respuesta de consulta < 3s p95. |
 | **Accesibilidad** | WCAG 2.1 AA. |
-| **Seguridad** | HTTPS obligatorio, no persistir clave del expediente en cliente, rate limiting por IP en endpoint de consulta. |
+| **Seguridad** | HTTPS obligatorio, no persistir clave del expediente en cliente, rate limiting por IP en Route Handler de consulta. |
 | **Privacidad** | No almacenar datos personales del ciudadano; cumplir Ley N° 29733 de Protección de Datos. |
-| **Cumplimiento** | Ley de Gobierno Digital (DL 1412), alineamiento al TUPA del DP. |
+| **Cumplimiento** | Ley de Gobierno Digital (DL 1412), alineamiento al TUPA del DP (DS N° 062-2010-PCM mod. por RM N° 272-2017-PCM). |
 | **Idioma** | Español; preparado para quechua/aimara en fase 2. |
 | **Compatibilidad** | Navegadores Chrome/Safari/Edge/Firefox últimas 2 versiones; iOS 14+, Android 8+. |
 
@@ -107,11 +108,10 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | Capa | Tecnología | Razón |
 |---|---|---|
 | Hosting | **Vercel** | Despliegue continuo, edge network global, HTTPS automático, gratis para el piloto. |
-| Frontend | **Next.js 14** (App Router) + React 18 + TypeScript | SSR para SEO/accesibilidad, rutas dinámicas, óptimo para Vercel. |
+| Frontend + API | **Next.js 14** (App Router) + React 18 + TypeScript | Full-stack en un solo repo; Route Handlers reemplazan servidor Express; óptimo para Vercel. |
 | Estilos | **Tailwind CSS** + **shadcn/ui** | Diseño accesible y rápido de iterar. |
-| API capa intermedia | **Next.js Route Handlers** (`app/api/*`) | Sin servidor adicional; corre en Vercel Functions. |
-| API de expedientes | API REST provista por el DP | Fuente de verdad del estado del expediente. |
-| Datos TUPA | JSON estático versionado en repo | Bajo costo, fácil de actualizar vía PR. |
+| API de expedientes | API REST provista por el DP (`POST https://www.presidencia.gob.pe/api/consulta-expedientes/index.php`) | Fuente de verdad del estado del expediente. |
+| Datos TUPA | JSON estático versionado en repo (`data/mock/tupa.json`) | Bajo costo, fácil de actualizar vía PR. |
 | Chatbot | Motor de intents propio (JSON) sobre Next.js | Sin dependencia externa de NLP en el MVP. |
 | Observabilidad | Vercel Analytics + logs de Vercel Functions | Incluido en la plataforma. |
 
@@ -125,60 +125,59 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
             │ HTTPS
             ▼
    ┌──────────────────────────────────┐
-   │  Vercel (Next.js)                │
+   │  Vercel (Next.js full-stack)     │
    │  - Páginas SSR                   │
-   │  - /api/expedientes/consulta     │──── HTTPS ───▶ ┌──────────────────┐
-   │  - /api/tupa                     │                │ API Expedientes  │
-   │  - /api/chat                     │                │ (Despacho Presid)│
-   └──────────────────────────────────┘                └──────────────────┘
+   │  - /api/expedientes/consulta     │──── HTTPS ───▶ ┌──────────────────────────────┐
+   │  - /api/tupa                     │                │ API Expedientes DP           │
+   │  - /api/chat                     │                │ presidencia.gob.pe           │
+   └──────────────────────────────────┘                └──────────────────────────────┘
 ```
 
 ### Contratos de API
 
-**POST `/api/expedientes/consulta`** (proxy hacia la API del DP)
+**POST `/api/expedientes/consulta`** (Route Handler — proxy hacia la API del DP)
 
 Request:
 ```json
-{ "expediente": "DP-2026-000123", "clave": "ABCD1234" }
+{ "expediente": "2026-0010582", "clave": "4176" }
 ```
 
-Response 200:
+Internamente llama a la API del DP con `{ "usuario": "<expediente>", "clave": "<clave>" }`.
+
+Response 200 (mapeado desde la respuesta del DP):
 ```json
 {
-  "expediente": "DP-2026-000123",
-  "estado": "EN TRAMITE",
-  "tramite": "Solicitud de audiencia",
-  "ultimaActualizacion": "2026-06-10T14:30:00Z",
-  "mensaje": "Expediente derivado a la unidad de atención.",
-  "historial": [
-    { "fecha": "2026-06-01", "evento": "Ingreso por mesa de partes" },
-    { "fecha": "2026-06-05", "evento": "Derivado a unidad de atención" }
-  ],
-  "proximoPaso": "Evaluación por unidad competente."
+  "expediente": "2026-0010582",
+  "tramite": "Solicitud de Audiencia Presidencial",
+  "administrado": "QUISPE MAMANI ROSA ELENA",
+  "estadoActual": "EN PROCESO",
+  "detalleEstado": "Su expediente se encuentra en proceso de evaluación por el área correspondiente.",
+  "ultimaActualizacion": "2026-06-13 01:04:35",
+  "tiempoEstimadoDias": 5,
+  "mensaje": "Consulta procesada exitosamente."
 }
 ```
 
 Errores: `400` (datos inválidos) · `404` (expediente no encontrado) · `401` (clave incorrecta) · `502` (API DP no disponible) · `429` (rate limit).
 
-**GET `/api/tupa/tramites`** — listado de trámites con requisitos y plazos.
+**GET `/api/tupa`** — listado de trámites del TUPA con requisitos, plazos, costos y canales.
 
 **POST `/api/chat`** — `{ mensaje, sessionId }` → respuesta del motor de intents.
 
 ### Variables de entorno (Vercel)
 
-- `DP_API_BASE_URL` — URL de la API del Despacho Presidencial.
-- `DP_API_TOKEN` — token de acceso (si aplica).
+- `DP_API_BASE_URL` — URL de la API del DP (default: `https://www.presidencia.gob.pe/api/consulta-expedientes/index.php`).
 - `RATE_LIMIT_PER_MIN` — default 30.
 
 ---
 
 ## 8. Experiencia de usuario
 
-### Flujo principal (CU-01)
+### Flujo principal (CU-01 + CU-02)
 
 1. Ciudadano entra a la URL → ve título claro y CTA "Consultar mi expediente".
 2. Ingresa número de expediente y clave → presiona consultar.
-3. Ve resultado: badge de estado, fecha de última actualización, línea de tiempo, próximo paso.
+3. Ve resultado: badge de estado, nombre del administrado, trámite, detalle del estado, tiempo estimado de resolución, fecha de última actualización.
 4. Acciones secundarias: "Consultar otro expediente", "Ver requisitos de mi trámite", "Hablar con asistente".
 
 ### Principios de diseño
@@ -192,15 +191,16 @@ Errores: `400` (datos inválidos) · `404` (expediente no encontrado) · `401` (
 
 ## 9. Plan de entrega (48 horas de hackatón)
 
-| Hito | Tiempo acumulado | Entregable |
-|---|---|---|
-| Setup repo + Next.js + Vercel preview | +4 h | URL pública con landing. |
-| Formulario + Route Handler `/api/expedientes/consulta` con mock | +12 h | Consulta end-to-end con datos JSON. |
-| Integración real con API DP | +20 h | Consulta sobre datos reales del lab. |
-| Vista de resultado + historial + manejo de errores | +28 h | CU-01 y CU-02 cerrados. |
-| Listado TUPA + chatbot básico | +36 h | CU-03 y CU-04. |
-| QA accesibilidad + responsive + pulido visual | +42 h | WCAG AA, mobile OK. |
-| Demo + pitch + modelo de negocio | +48 h | Presentación final. |
+| Hito | Tiempo acumulado | Entregable | Estado |
+|---|---|---|---|
+| Setup repo + estructura Next.js | +4 h | Repo con carpetas y dependencias. | ✅ Hecho |
+| Integración real con API DP + datos de prueba | +8 h | Route Handler `/api/expedientes/consulta` funcional contra API real. | ✅ Hecho |
+| Datos TUPA reales en JSON | +8 h | `data/mock/tupa.json` con 3 trámites reales. | ✅ Hecho |
+| Formulario + página de resultado | +20 h | CU-01 y CU-02 end-to-end en el navegador. | ⏳ Pendiente |
+| Manejo de errores completo | +24 h | 404, 401, 502 con mensajes humanos. | ⏳ Pendiente |
+| Listado TUPA + chatbot básico | +36 h | CU-03 y CU-04. | ⏳ Pendiente |
+| QA accesibilidad + responsive + pulido visual | +42 h | WCAG AA, mobile OK. | ⏳ Pendiente |
+| Demo + pitch + modelo de negocio | +48 h | Presentación final. | ⏳ Pendiente |
 
 ---
 
@@ -208,11 +208,10 @@ Errores: `400` (datos inválidos) · `404` (expediente no encontrado) · `401` (
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| API del DP no disponible durante la demo | Alto | Capa proxy con cache de respuestas y modo "datos de ejemplo". |
-| Datos de prueba insuficientes | Medio | Trabajar con mock JSON paralelo del repo (`data/mock/`). |
+| API del DP no disponible durante la demo | Alto | Capa proxy con fallback a datos de ejemplo hardcodeados en el Route Handler. |
 | Latencia desde provincias | Medio | Vercel edge network + payload mínimo + SSR. |
-| Confusión del ciudadano con el campo "clave" | Medio | Microcopy + ejemplo + ayuda contextual. |
-| Cumplimiento de Ley de Datos Personales | Alto | No persistir datos, solo proxy; revisar con legal del DP. |
+| Confusión del ciudadano con el campo "clave" | Medio | Microcopy + ejemplo ("Ej: 4176") + ayuda contextual. |
+| Cumplimiento de Ley de Datos Personales | Alto | No persistir datos, solo proxy; no loguear nombre del administrado. |
 
 ---
 

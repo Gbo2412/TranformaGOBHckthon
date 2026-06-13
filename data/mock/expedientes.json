@@ -1,16 +1,9 @@
 {
+  "nota": "Datos de prueba reales de la API del Despacho Presidencial",
   "expedientes": [
-    {
-      "numero": "DP-2026-000123",
-      "clave": "ABCD1234",
-      "ciudadano": "Ciudadano de Ejemplo",
-      "tramite": "Solicitud de audiencia",
-      "estado": "EN TRAMITE",
-      "ultimaActualizacion": "2026-06-10T14:30:00Z",
-      "historial": [
-        { "fecha": "2026-06-01", "evento": "Ingreso por mesa de partes" },
-        { "fecha": "2026-06-05", "evento": "Derivado a unidad de atención" }
-      ]
-    }
+    { "usuario": "2026-0010582", "clave": "4176" },
+    { "usuario": "2026-0003984", "clave": "2851" },
+    { "usuario": "2026-0012476", "clave": "9634" },
+    { "usuario": "2026-0004721", "clave": "1548" }
   ]
 }
