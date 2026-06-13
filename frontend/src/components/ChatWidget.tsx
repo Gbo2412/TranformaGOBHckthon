@@ -9,6 +9,11 @@ interface Mensaje {
   opciones?: { label: string; valor: string }[];
 }
 
+interface FlujoConsulta {
+  paso: "esperando_numero" | "esperando_clave" | null;
+  expediente: string | null;
+}
+
 const BIENVENIDA: Mensaje = {
   de: "bot",
   texto: "¡Hola! Soy el asistente del Despacho Presidencial. ¿En qué puedo ayudarte?",
@@ -24,20 +29,103 @@ export function ChatWidget() {
   const [mensajes, setMensajes] = useState<Mensaje[]>([BIENVENIDA]);
   const [input, setInput] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [flujo, setFlujo] = useState<FlujoConsulta>({ paso: null, expediente: null });
+  const [ultimoEstado, setUltimoEstado] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes]);
 
+  function agregarMensajeBot(texto: string, opciones?: Mensaje["opciones"]) {
+    setMensajes((prev) => [...prev, { de: "bot", texto, opciones }]);
+  }
+
+  function agregarMensajeUsuario(texto: string) {
+    setMensajes((prev) => [...prev, { de: "usuario", texto }]);
+  }
+
   async function enviar(texto: string) {
     if (!texto.trim() || cargando) return;
-
-    const nuevoMensaje: Mensaje = { de: "usuario", texto };
-    setMensajes((prev) => [...prev, nuevoMensaje]);
     setInput("");
-    setCargando(true);
 
+    // Flujo de consulta de expediente
+    if (flujo.paso === "esperando_numero") {
+      const formatoValido = /^\d{4}-\d{5,8}$/.test(texto.trim());
+      agregarMensajeUsuario(texto);
+      if (!formatoValido) {
+        agregarMensajeBot("El formato no es válido. Ingresa el número tal como aparece en tu comprobante, por ejemplo: 2026-0010582");
+        return;
+      }
+      setCargando(true);
+      try {
+        const res = await fetch("/api/expedientes/consulta", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ expediente: texto.trim(), clave: "0" }),
+        });
+        if (res.status === 401) {
+          setFlujo({ paso: "esperando_clave", expediente: texto.trim() });
+          agregarMensajeBot("Expediente encontrado. Ahora ingresa tu clave de acceso:");
+        } else if (res.status === 404) {
+          agregarMensajeBot(
+            `No encontramos el expediente ${texto.trim()}. Verifica el número o acércate a mesa de partes.`,
+            [{ label: "Contactar mesa de partes", valor: "mesa_partes" }]
+          );
+        } else {
+          agregarMensajeBot("No pudimos verificar el expediente en este momento. Intenta de nuevo.");
+        }
+      } catch {
+        agregarMensajeBot("Hubo un problema de conexión. Intenta de nuevo en un momento.");
+      } finally {
+        setCargando(false);
+      }
+      return;
+    }
+
+    if (flujo.paso === "esperando_clave") {
+      const claveValida = /^\d+$/.test(texto.trim());
+      agregarMensajeUsuario(texto);
+      if (!claveValida) {
+        agregarMensajeBot("La clave debe contener solo números. Inténtalo de nuevo:");
+        return;
+      }
+      setCargando(true);
+      try {
+        const res = await fetch("/api/expedientes/consulta", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ expediente: flujo.expediente, clave: texto.trim() }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          agregarMensajeBot(
+            `No encontramos tu expediente. Verifica el número (${flujo.expediente}) y la clave, o acércate a mesa de partes.`,
+            [{ label: "Contactar mesa de partes", valor: "mesa_partes" }]
+          );
+        } else {
+          setUltimoEstado(data.estadoActual);
+          agregarMensajeBot(
+            `Expediente ${data.expediente}\n\nTrámite: ${data.tramite}\nTitular: ${data.administrado}\nEstado: ${data.estadoActual}\nDetalle: ${data.detalleEstado}\nÚltima actualización: ${data.ultimaActualizacion}`,
+            [
+              { label: `¿Qué significa "${data.estadoActual}"?`, valor: "explicar_estado" },
+              { label: "Consultar otro expediente", valor: "consultar_estado" },
+            ]
+          );
+        }
+      } catch {
+        agregarMensajeBot("Hubo un problema al consultar. Intenta de nuevo en un momento.");
+      } finally {
+        setCargando(false);
+        setFlujo({ paso: null, expediente: null });
+      }
+      return;
+    }
+
+    // Flujo general — chatbot por keywords
+    agregarMensajeUsuario(texto);
+    setCargando(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -45,12 +133,9 @@ export function ChatWidget() {
         body: JSON.stringify({ mensaje: texto }),
       });
       const data = await res.json();
-      setMensajes((prev) => [...prev, { de: "bot", texto: data.texto, opciones: data.opciones }]);
+      agregarMensajeBot(data.texto, data.opciones);
     } catch {
-      setMensajes((prev) => [
-        ...prev,
-        { de: "bot", texto: "Hubo un problema. Intenta de nuevo en un momento." },
-      ]);
+      agregarMensajeBot("Hubo un problema. Intenta de nuevo en un momento.");
     } finally {
       setCargando(false);
     }
@@ -58,6 +143,31 @@ export function ChatWidget() {
 
   function handleOpcion(valor: string, label: string) {
     if (valor === "__link_inicio" || valor === "__link_tupa") return;
+
+    if (valor === "consultar_estado") {
+      agregarMensajeUsuario(label);
+      setFlujo({ paso: "esperando_numero", expediente: null });
+      agregarMensajeBot("Por favor, ingresa tu número de expediente (Ej: 2026-0001234):");
+      return;
+    }
+
+    if (valor === "explicar_estado") {
+      const explicaciones: Record<string, string> = {
+        "DOCUMENTO REGISTRADO": "Tu solicitud fue recibida correctamente en el sistema y está en cola para ser asignada a un funcionario que la revisará.",
+        "EN PROCESO": "Un funcionario está revisando tu caso actualmente. Recibirás una respuesta dentro del plazo establecido según el tipo de trámite.",
+        "SE EMITIÓ RESPUESTA": "Ya se generó una respuesta oficial a tu solicitud. Si no la recibiste, acércate a mesa de partes o escribe a accesoinf@presidencia.gob.pe.",
+      };
+      const explicacion = ultimoEstado
+        ? (explicaciones[ultimoEstado] ?? `El estado "${ultimoEstado}" indica que tu expediente está siendo gestionado. Contáctanos si necesitas más detalles.`)
+        : "No tengo información del estado en este momento.";
+      agregarMensajeUsuario(label);
+      agregarMensajeBot(explicacion, [
+        { label: "Consultar otro expediente", valor: "consultar_estado" },
+        { label: "Contactar mesa de partes", valor: "mesa_partes" },
+      ]);
+      return;
+    }
+
     enviar(label);
   }
 
@@ -125,23 +235,47 @@ export function ChatWidget() {
             {cargando && (
               <div className="flex items-start">
                 <div className="bg-gray-100 text-gray-500 text-sm px-3 py-2 rounded-xl rounded-bl-none">
-                  Escribiendo...
+                  Consultando...
                 </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
+          {/* Cancelar flujo */}
+          {flujo.paso && (
+            <div className="px-3 pt-2 flex justify-end border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setFlujo({ paso: null, expediente: null });
+                  agregarMensajeBot("Consulta cancelada. ¿En qué más puedo ayudarte?", [
+                    { label: "Consultar mi expediente", valor: "consultar_estado" },
+                    { label: "Ver trámites del TUPA", valor: "__link_tupa" },
+                  ]);
+                }}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Cancelar consulta
+              </button>
+            </div>
+          )}
+
           {/* Input */}
           <form
             onSubmit={(e) => { e.preventDefault(); enviar(input); }}
-            className="border-t border-gray-100 px-3 py-2 flex gap-2"
+            className={`px-3 py-2 flex gap-2 ${!flujo.paso ? "border-t border-gray-100" : ""}`}
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Escribe tu consulta..."
+              placeholder={
+                flujo.paso === "esperando_numero"
+                  ? "Ej: 2026-0001234"
+                  : flujo.paso === "esperando_clave"
+                  ? "Ej: 1234"
+                  : "Escribe tu consulta..."
+              }
               className="flex-1 text-sm border border-gray-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
