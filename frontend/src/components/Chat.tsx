@@ -17,13 +17,13 @@ interface Message {
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "¡Hola! Soy el asistente del Despacho Presidencial. Puedo ayudarte a consultar el estado de tu expediente, explicarte los requisitos de un trámite o enviarte el resultado por correo. ¿En qué puedo ayudarte hoy?",
+    "¡Hola! 👋 Bienvenido al Asistente del Despacho Presidencial.\n\nTe puedo ayudar con:\n\n- **Estado de tu expediente** — saber en qué va tu trámite en tiempo real (necesitarás tu número y clave).\n- **Información de trámites** — requisitos, plazos y costos de Solicitud Simple, Acceso a la Información Pública (SAIP) y Reclamo.\n- **Otras consultas** — horarios, ubicación de mesa de partes o cualquier duda sobre la entidad.\n\nCuéntame, ¿en qué te ayudo?",
 };
 
 const QUICK_REPLIES = [
-  "Consultar mi expediente",
-  "Requisitos de una Solicitud Simple",
-  "Horarios de mesa de partes",
+  "Consultar el estado de un expediente",
+  "Conocer sobre un trámite",
+  "Otra consulta sobre el Despacho Presidencial",
 ];
 
 function isFirstInAssistantSequence(messages: Message[], index: number): boolean {
