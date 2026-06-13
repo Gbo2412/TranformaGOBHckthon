@@ -1,9 +1,0 @@
-{
-  "nota": "Datos de prueba reales de la API del Despacho Presidencial",
-  "expedientes": [
-    { "usuario": "2026-0010582", "clave": "4176" },
-    { "usuario": "2026-0003984", "clave": "2851" },
-    { "usuario": "2026-0012476", "clave": "9634" },
-    { "usuario": "2026-0004721", "clave": "1548" }
-  ]
-}
