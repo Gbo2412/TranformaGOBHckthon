@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import { SystemBubble } from "./SystemBubble";
 
 type Role = "user" | "assistant" | "system";
@@ -246,9 +248,54 @@ function Bubble({
       </div>
       <div
         aria-label="Mensaje del asistente"
-        className="tabular max-w-[85%] whitespace-pre-wrap rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 text-base text-ink-primary shadow-sm"
+        className="tabular max-w-[85%] rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 text-base text-ink-primary shadow-sm"
       >
-        {content}
+        <ReactMarkdown
+          remarkPlugins={[remarkBreaks]}
+          components={{
+            p: ({ children }) => (
+              <p className="my-2 first:mt-0 last:mb-0 whitespace-pre-wrap">{children}</p>
+            ),
+            strong: ({ children }) => (
+              <strong className="font-semibold text-ink-primary">{children}</strong>
+            ),
+            em: ({ children }) => <em className="italic">{children}</em>,
+            ul: ({ children }) => (
+              <ul className="my-2 list-disc space-y-1 pl-5">{children}</ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="my-2 list-decimal space-y-1 pl-5">{children}</ol>
+            ),
+            li: ({ children }) => <li className="leading-snug">{children}</li>,
+            hr: () => <hr className="my-3 border-line" />,
+            a: ({ href, children }) => (
+              <a
+                href={href}
+                className="text-accent-user underline underline-offset-2 hover:no-underline"
+                target={href?.startsWith("http") ? "_blank" : undefined}
+                rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
+              >
+                {children}
+              </a>
+            ),
+            code: ({ children }) => (
+              <code className="rounded bg-surface-muted px-1.5 py-0.5 text-sm">
+                {children}
+              </code>
+            ),
+            h1: ({ children }) => (
+              <p className="my-2 font-semibold text-ink-primary">{children}</p>
+            ),
+            h2: ({ children }) => (
+              <p className="my-2 font-semibold text-ink-primary">{children}</p>
+            ),
+            h3: ({ children }) => (
+              <p className="my-2 font-semibold text-ink-primary">{children}</p>
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
       </div>
     </div>
   );
