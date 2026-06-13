@@ -24,6 +24,31 @@ export const TOOLS: Anthropic.Tool[] = [
       required: ["expediente", "clave"],
     },
   },
+  {
+    name: "enviar_resultado_por_correo",
+    description:
+      "Envía al ciudadano el resumen del estado de su expediente por correo electrónico. Úsala SOLO después de haber consultado un expediente exitosamente Y de que el ciudadano haya aceptado recibir el resultado por correo Y de haber confirmado su dirección de correo.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        destinatario: {
+          type: "string",
+          description: "Dirección de correo del ciudadano (validar formato básico).",
+        },
+        asunto: {
+          type: "string",
+          description:
+            "Asunto del correo, ej: 'Estado de tu expediente 2026-0010582 — Despacho Presidencial'.",
+        },
+        cuerpo: {
+          type: "string",
+          description:
+            "Cuerpo del correo en texto plano: estado, trámite, administrado, detalle, última actualización y tiempo estimado en días hábiles.",
+        },
+      },
+      required: ["destinatario", "asunto", "cuerpo"],
+    },
+  },
 ];
 
 async function consultarExpediente(expediente: string, clave: string): Promise<unknown> {
@@ -60,11 +85,35 @@ async function consultarExpediente(expediente: string, clave: string): Promise<u
   }
 }
 
+function correoValido(correo: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+}
+
+async function enviarResultadoPorCorreo(
+  destinatario: string,
+  asunto: string,
+  cuerpo: string
+): Promise<unknown> {
+  if (!correoValido(destinatario)) {
+    return { error: "El correo indicado no parece válido. Pídele al ciudadano que lo verifique." };
+  }
+  // TODO(colaborador): integrar Resend en /api/email y consumirlo desde aquí.
+  // Por ahora se simula envío exitoso para que el flujo del agente quede armado.
+  console.log("[tool enviar_resultado_por_correo] stub", { destinatario, asunto });
+  return {
+    ok: true,
+    mensaje: `Correo enviado a ${destinatario}.`,
+    cuerpoPreview: cuerpo.slice(0, 60),
+  };
+}
+
 export async function ejecutarTool(nombre: string, input: unknown): Promise<unknown> {
   const i = input as Record<string, string>;
   switch (nombre) {
     case "consultar_expediente":
       return consultarExpediente(i.expediente, i.clave);
+    case "enviar_resultado_por_correo":
+      return enviarResultadoPorCorreo(i.destinatario, i.asunto, i.cuerpo);
     default:
       return { error: `Herramienta desconocida: ${nombre}` };
   }

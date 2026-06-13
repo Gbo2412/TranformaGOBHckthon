@@ -28,7 +28,7 @@ export async function runAgent(
 
   let response = await client.messages.create({
     model: "claude-haiku-4-5",
-    max_tokens: 500,
+    max_tokens: 1024,
     system: SYSTEM_PROMPT,
     tools: TOOLS,
     messages,
@@ -55,7 +55,7 @@ export async function runAgent(
 
     response = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 500,
+      max_tokens: 1024,
       system: SYSTEM_PROMPT,
       tools: TOOLS,
       messages,
