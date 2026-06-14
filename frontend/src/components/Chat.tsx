@@ -121,19 +121,19 @@ export function Chat() {
 
   return (
     <div className="flex h-full flex-col bg-surface-page">
-      <header className="sticky top-0 z-10 border-b border-line bg-surface-card px-4 py-3">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface-card/95 px-4 py-3 backdrop-blur elev-bar">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <div
             aria-hidden="true"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-700 text-white"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-700 text-white ring-1 ring-brand-800/20"
           >
-            <span className="text-sm font-bold">DP</span>
+            <span className="text-sm font-bold tracking-tight">DP</span>
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+          <div className="flex flex-col leading-tight">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-700">
               Despacho Presidencial
             </p>
-            <h1 className="text-lg font-semibold text-ink-primary">
+            <h1 className="text-base font-semibold text-ink-primary sm:text-lg">
               Asistente de expedientes
             </h1>
           </div>
@@ -152,16 +152,17 @@ export function Chat() {
           {messages.map((m, i) => {
             if (m.role === "system") {
               return (
-                <SystemBubble
-                  key={i}
-                  tone={m.tone ?? "info"}
-                  message={m.content}
-                  action={
-                    m.tone === "danger"
-                      ? { label: "Reintentar", onClick: retryLastUser }
-                      : undefined
-                  }
-                />
+                <div key={i} className="msg-enter">
+                  <SystemBubble
+                    tone={m.tone ?? "info"}
+                    message={m.content}
+                    action={
+                      m.tone === "danger"
+                        ? { label: "Reintentar", onClick: retryLastUser }
+                        : undefined
+                    }
+                  />
+                </div>
               );
             }
             return (
@@ -185,7 +186,7 @@ export function Chat() {
         </div>
       </div>
 
-      <footer className="border-t border-line bg-surface-card px-4 py-3">
+      <footer className="border-t border-line bg-surface-card/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -210,13 +211,13 @@ export function Chat() {
             rows={1}
             disabled={pending}
             autoComplete="off"
-            className="tabular min-h-[44px] flex-1 resize-none rounded-2xl border border-line bg-surface-card px-4 py-3 text-base text-ink-primary outline-none placeholder:text-ink-muted focus:border-accent-user disabled:opacity-60"
+            className="tabular min-h-[44px] flex-1 resize-none rounded-2xl border border-line bg-surface-card px-4 py-3 text-base text-ink-primary outline-none transition placeholder:text-ink-muted focus:border-accent-user focus:ring-4 focus:ring-accent-user/15 disabled:opacity-60"
           />
           <button
             type="submit"
             aria-label="Enviar mensaje"
             disabled={pending || !input.trim()}
-            className="h-11 shrink-0 rounded-full bg-accent-user px-5 text-sm font-semibold text-white transition hover:bg-accent-userHover disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 shrink-0 rounded-full bg-accent-user px-5 text-sm font-semibold text-white transition-all duration-150 hover:bg-accent-userHover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
           >
             Enviar
           </button>
@@ -240,13 +241,13 @@ function ChipsRow({
     <div
       role="group"
       aria-label="Sugerencias rápidas"
-      className="mt-2 flex flex-wrap gap-2"
+      className="msg-enter mt-2 flex flex-wrap gap-2"
     >
       {chips.map((q) => (
         <button
           key={q}
           onClick={() => onPick(q)}
-          className="min-h-[44px] rounded-full border border-line bg-surface-muted px-4 py-2 text-sm text-ink-secondary transition hover:border-brand-700 hover:text-brand-700"
+          className="min-h-[44px] rounded-full border border-line bg-surface-card px-4 py-2 text-sm font-medium text-ink-secondary transition-all duration-150 hover:-translate-y-px hover:border-brand-700 hover:text-brand-700 hover:shadow-sm active:translate-y-0 active:scale-[0.98]"
         >
           {q}
         </button>
@@ -268,10 +269,10 @@ function Bubble({
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
+      <div className="msg-enter flex justify-end">
         <div
           aria-label="Tu mensaje"
-          className="tabular max-w-[85%] whitespace-pre-wrap rounded-bubble rounded-br-md bg-accent-user px-4 py-3 text-base text-white"
+          className="tabular max-w-[85%] whitespace-pre-wrap rounded-bubble rounded-br-md bg-accent-user px-4 py-3 text-base leading-relaxed text-white elev-1"
         >
           {content}
         </div>
@@ -280,10 +281,10 @@ function Bubble({
   }
 
   return (
-    <div className="flex items-end gap-2">
+    <div className="msg-enter flex items-end gap-2">
       <div
         aria-hidden="true"
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white ${
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold tracking-tight text-white ring-1 ring-brand-800/20 ${
           showAvatar ? "" : "invisible"
         }`}
       >
@@ -291,7 +292,7 @@ function Bubble({
       </div>
       <div
         aria-label="Mensaje del asistente"
-        className="tabular max-w-[85%] rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 text-base text-ink-primary shadow-sm"
+        className="tabular max-w-[85%] rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 text-base leading-relaxed text-ink-primary elev-1"
       >
         <ReactMarkdown
           remarkPlugins={[remarkBreaks]}
@@ -314,7 +315,7 @@ function Bubble({
             a: ({ href, children }) => (
               <a
                 href={href}
-                className="text-accent-user underline underline-offset-2 hover:no-underline"
+                className="text-accent-user underline underline-offset-2 transition hover:no-underline"
                 target={href?.startsWith("http") ? "_blank" : undefined}
                 rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
               >
@@ -349,15 +350,15 @@ function TypingBubble() {
     <div
       aria-live="polite"
       aria-label="El asistente está escribiendo"
-      className="flex items-end gap-2"
+      className="msg-enter flex items-end gap-2"
     >
       <div
         aria-hidden="true"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold tracking-tight text-white ring-1 ring-brand-800/20"
       >
         DP
       </div>
-      <div className="flex max-w-[85%] items-center gap-1 rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 shadow-sm">
+      <div className="flex max-w-[85%] items-center gap-1.5 rounded-bubble rounded-bl-md border border-line bg-surface-card px-4 py-3 elev-1">
         <Dot />
         <Dot delay="0.15s" />
         <Dot delay="0.3s" />
@@ -369,7 +370,7 @@ function TypingBubble() {
 function Dot({ delay = "0s" }: { delay?: string }) {
   return (
     <span
-      className="inline-block h-2 w-2 animate-bounce rounded-full bg-ink-muted"
+      className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-ink-muted"
       style={{ animationDelay: delay }}
     />
   );

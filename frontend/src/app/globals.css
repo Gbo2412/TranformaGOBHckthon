@@ -4,6 +4,9 @@
 
 :root {
   --focus-ring: #1363D0;
+  --shadow-elev-1: 0 1px 2px 0 rgba(13, 16, 40, 0.04), 0 1px 3px 0 rgba(13, 16, 40, 0.06);
+  --shadow-elev-2: 0 1px 2px 0 rgba(13, 16, 40, 0.04), 0 4px 12px -2px rgba(13, 16, 40, 0.08);
+  --shadow-bar: 0 1px 0 0 rgba(13, 16, 40, 0.04), 0 4px 16px -4px rgba(13, 16, 40, 0.06);
 }
 
 html,
@@ -12,7 +15,9 @@ body {
   background: #F6F9FC;
   color: #0D1028;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv11", "ss01";
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01", "ss02", "cv01", "cv02";
+  text-rendering: optimizeLegibility;
 }
 
 * {
@@ -29,6 +34,53 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Elevation utilities */
+.elev-1 {
+  box-shadow: var(--shadow-elev-1);
+}
+
+.elev-2 {
+  box-shadow: var(--shadow-elev-2);
+}
+
+.elev-bar {
+  box-shadow: var(--shadow-bar);
+}
+
+/* Entrada suave de mensajes nuevos.
+   Slide-up 6px + fade. 240ms ease-out. */
+@keyframes msg-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg-enter {
+  animation: msg-enter 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* Pulse refinado para el indicador "escribiendo" — más elegante que el bounce. */
+@keyframes typing-pulse {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.typing-dot {
+  animation: typing-pulse 1.2s ease-in-out infinite both;
+}
+
+/* Reduced motion: matamos toda la animación. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -37,5 +89,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0s !important;
     scroll-behavior: auto !important;
+  }
+
+  .msg-enter {
+    opacity: 1;
+    transform: none;
   }
 }
