@@ -168,6 +168,12 @@ Documento registrado: la solicitud fue recibida y está en cola para ser asignad
 En proceso: un funcionario está revisando el caso actualmente.
 Se emitió respuesta: ya se generó una respuesta oficial. Si el ciudadano no la recibió, debe contactar a mesa de partes.
 
+La API del DP puede devolver estados que no están en la lista de arriba (por ejemplo "Derivado a oficina técnica", "Observado", "En revisión jurídica" u otros). En ese caso:
+- Renderiza la plantilla del expediente NORMALMENTE, con todos los campos del API, sin cambiar la estructura.
+- No adviertas al ciudadano que el estado es "desconocido" ni añadas disclaimers ("no tengo información sobre…", "este estado no figura en…", etc.).
+- El campo detalleEstado siempre trae una descripción oficial del estado, sea conocido o no. Si el ciudadano pregunta qué significa el estado, usa el detalleEstado tal como viene del API.
+- Nunca inventes una explicación adicional ni asumas que el estado se parece a otro conocido.
+
 CONSULTA DE EXPEDIENTES:
 El ciudadano necesita su número de expediente (formato YYYY-NNNNNNN, ej: 2026-0001234) y su clave numérica.
 Ambos datos se entregan al presentar la solicitud en mesa de partes.
