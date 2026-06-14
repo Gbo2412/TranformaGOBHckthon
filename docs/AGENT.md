@@ -198,7 +198,7 @@ El agente puede sugerir **acciones rápidas** al final de ciertas respuestas, ag
 | Después de entregar estado de expediente | `¿Qué significa este estado?`, `Consultar otro expediente`, `Información de un trámite` |
 | Lista de los 3 trámites (cuando es ambiguo) | `Solicitud Simple`, `SAIP`, `Reclamo`, `Consultar mi expediente` |
 | Después de DP-001 | `Ver SAIP`, `Ver Reclamo`, `Consultar mi expediente` |
-| Después de DP-002 | `Ver Solicitud Simple`, `Ver Reclamo`, `Consultar mi expediente` |
+| Después de DP-002 | `⬇ Descargar el formulario` *(action chip — ver abajo)*, `Ver Solicitud Simple`, `Ver Reclamo`, `Consultar mi expediente` |
 | Después de DP-003 | `Ver Solicitud Simple`, `Ver SAIP`, `Consultar mi expediente` |
 | Otras respuestas | Sin marcador. |
 
@@ -209,6 +209,27 @@ Implementado en `frontend/src/app/api/chat/route.ts`:
 const CHIPS_MARKER = /\n*\[CHIPS:\s*([^\]]+)\]\s*$/i;
 ```
 Regex extrae el grupo, recorta del texto, split por `|`, trim, filtra `length <= 60`.
+
+### Action chips (interceptados por el front)
+
+Algunos chips representan **acciones directas** (abrir un enlace, descargar un archivo). El front los intercepta antes de mandarlos al agente: el ciudadano hace click, se abre la URL en una pestaña nueva, y la conversación no se interrumpe. **El agente nunca recibe el texto del chip.** Ventajas:
+
+- 0 ms de latencia (no round-trip con Claude).
+- 0 tokens consumidos.
+- Funciona aunque la API del agente esté caída.
+- Más confiable que pedirle al modelo que reformule un enlace.
+
+**Action chips definidos hoy:**
+
+| Etiqueta | Acción | URL |
+|---|---|---|
+| `⬇ Descargar el formulario` | Abre el PDF oficial del formulario SAIP en pestaña nueva | http://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf |
+
+**Implementación**: mapa `CHIP_ACTIONS` en `frontend/src/components/Chat.tsx`. Para agregar más action chips, sumar entrada al mapa (sin tocar `ChipsRow` ni el endpoint).
+
+**Comportamiento dual**:
+- Si el ciudadano **clickea el chip** → action directa, no toca al agente.
+- Si el ciudadano **pide el formulario por lenguaje natural** ("dame el formulario", "envíamelo", "cómo lo lleno") → el agente responde con un bloque markdown que incluye el mismo enlace + canales de presentación. Ver §7.2.
 
 ## 7. Plantillas de respuesta
 
@@ -266,6 +287,8 @@ Permite a cualquier ciudadano solicitar información pública que posea el Despa
 - `Silencio administrativo` SOLO aparece en DP-002.
 - `Costo` puede ir como `Gratuito` simple (DP-001, DP-003) o `Gratuito · Reproducción: ...` (DP-002).
 - Cierre fijo: "¿Quieres ver otro trámite o consultar el estado de uno que ya tienes?".
+- **Solo en DP-002 (SAIP)** el primer chip post-plantilla es `⬇ Descargar el formulario`, que es un **action chip** interceptado por el front — abre directamente el PDF oficial del SUT sin pasar por el agente. Ver §6 "Action chips".
+- Si el ciudadano pide el formulario por lenguaje natural en lugar de usar el chip, el agente responde con un bloque markdown que reproduce el enlace + canales de presentación (correo, presencial). El texto exacto vive en la sección "FORMULARIO OFICIAL DEL SAIP" del system prompt.
 
 ## 8. Reglas de tono y formato
 

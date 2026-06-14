@@ -21,6 +21,13 @@ const WELCOME_CHIPS = [
   "Otra consulta sobre el Despacho Presidencial",
 ];
 
+// Chips que son acciones directas (no pasan por el agente).
+// Al clickear, el front abre la URL en una pestaña nueva.
+const CHIP_ACTIONS: Record<string, string> = {
+  "⬇ Descargar el formulario":
+    "http://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf",
+};
+
 const WELCOME: Message = {
   role: "assistant",
   content:
@@ -87,6 +94,15 @@ export function Chat() {
     } finally {
       setPending(false);
     }
+  }
+
+  function handleChipClick(label: string) {
+    const url = CHIP_ACTIONS[label];
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    send(label);
   }
 
   function retryLastUser() {
@@ -163,7 +179,7 @@ export function Chat() {
           {showChips && (
             <ChipsRow
               chips={lastMessage.chips!}
-              onPick={(text) => send(text)}
+              onPick={handleChipClick}
             />
           )}
         </div>
