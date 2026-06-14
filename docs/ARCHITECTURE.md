@@ -51,7 +51,7 @@ Reemplaza a `docs/arquitectura/arquitectura.md` (archivado en `docs/archive/`).
 | LLM | **Claude Haiku 4.5** vía `@anthropic-ai/sdk` | `model: "claude-haiku-4-5"`. |
 | Datos TUPA | JSON estático versionado en `frontend/src/data/tupa.json` | Versionable por PR. |
 | API de expedientes | API REST del DP (`presidencia.gob.pe/api/consulta-expedientes/index.php`) | Datos: número + clave. |
-| Envío de correo | Stub en `tools.ts` + `/api/email` | **Pendiente integración Resend.** |
+| Envío de correo | Gmail API OAuth2 en `/api/email` + `tools.ts` | `GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN` + `EMAIL_FROM`. |
 | Observabilidad | Vercel Analytics + logs de Functions | Sin telemetría custom todavía. |
 
 ## 3. Estructura de carpetas
@@ -152,7 +152,7 @@ proyecto/
 | Chat UI | ✅ Producción | Mobile-first, AA, Inter, gob.pe tokens. |
 | Agente Claude + tool use | ✅ Producción | Haiku 4.5, max_tokens 1024. |
 | Tool `consultar_expediente` | ✅ Producción | Contra API DP real. |
-| Tool `enviar_resultado_por_correo` | 🟡 Stub | Devuelve OK sin enviar. Falta Resend. |
+| Tool `enviar_resultado_por_correo` | ✅ Producción | Gmail API OAuth2. Chip "Envíamelo por correo" post-expediente. |
 | Idioma quechua | ✅ Producción | Detección por heurística + respuesta completa en quechua. |
 | Idioma aymara | ✅ Producción | Mensaje único de derivación. |
 | Chips contextuales | ✅ Producción | Marcador `[CHIPS:…]` parseado en `/api/chat`. |

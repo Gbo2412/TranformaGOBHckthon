@@ -11,7 +11,7 @@ Contratos de los 3 endpoints expuestos por el proyecto en Vercel.
 |---|---|---|---|
 | `/api/chat` | POST | Frontend (`Chat.tsx`) | ✅ Producción |
 | `/api/expedientes/consulta` | POST | Tool del agente (`tools.ts`) | ✅ Producción |
-| `/api/email` | POST | Tool del agente (planeado) | 🟡 Stub (no envía correo real) |
+| `/api/email` | POST | Tool del agente (`enviar_resultado_por_correo`) | ✅ Producción — Gmail OAuth2 |
 
 Todos corren con `runtime = "nodejs"` en Vercel Functions.
 
@@ -156,7 +156,7 @@ Content-Type: application/json
 
 ## 3. `POST /api/email`
 
-🟡 **Estado: STUB.** No envía correo real. Devuelve OK para que el flujo del agente funcione end-to-end durante demo.
+✅ **Estado: Producción.** Envía correo real via Gmail API (OAuth2 refresh token). Variables de entorno requeridas: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `EMAIL_FROM`.
 
 ### Request
 
@@ -173,12 +173,12 @@ Content-Type: application/json
 }
 ```
 
-### Response 200 (stub)
+### Response 200
 
 ```json
 {
   "ok": true,
-  "nota": "Stub — envío real pendiente de integración por el colaborador."
+  "id": "<gmail_message_id>"
 }
 ```
 
@@ -188,13 +188,14 @@ Content-Type: application/json
 |---|---|
 | 400 | Falta `destinatario`, `asunto` o `cuerpo`. |
 
-### Trabajo pendiente para producción
+### Implementación
 
-1. Instalar `resend` (o servicio equivalente verificado para `*.gob.pe`).
-2. Configurar dominio remitente verificado.
-3. Reemplazar el `console.log` por la llamada real al servicio.
-4. Conectar la tool `enviar_resultado_por_correo` en `tools.ts` a este endpoint (hoy la tool tiene su propio stub, no llama a `/api/email`).
-5. Variables de entorno: `RESEND_API_KEY`, `EMAIL_FROM`.
+Flujo interno de `/api/email`:
+1. Valida formato de `destinatario` con regex.
+2. Obtiene `access_token` fresco desde `https://oauth2.googleapis.com/token` usando `GMAIL_CLIENT_ID` + `GMAIL_CLIENT_SECRET` + `GMAIL_REFRESH_TOKEN`.
+3. Construye el email en formato RFC 2822 con codificación base64url. Headers sanitizados contra injection; soporte UTF-8 para tildes y caracteres quechua.
+4. Envía via `https://gmail.googleapis.com/gmail/v1/users/me/messages/send` con `Bearer {access_token}`.
+5. Devuelve `{ ok: true, id }` o error con código HTTP apropiado.
 
 ---
 

@@ -56,7 +56,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | CU-02 | Ver detalle del estado, tiempo estimado, nombre del administrado y última actualización (en hora de Lima) **en la conversación** | **P0** | ✅ En producción |
 | CU-03 | Consultar requisitos, plazos, costos y canales de un trámite del TUPA **preguntándole al agente** | **P0** | ✅ En producción |
 | CU-04 | Orientación general por chat (mesa de partes, horarios, qué significa cada estado, recuperar clave) | **P0** | ✅ En producción |
-| CU-06 | **Recibir el resultado de la consulta por correo electrónico** (a pedido explícito del ciudadano) | **P1** | 🟡 Parcial — UI y agente listos; envío real pendiente Resend |
+| CU-06 | **Recibir el resultado de la consulta por correo electrónico** (a pedido explícito del ciudadano o via chip "Envíamelo por correo") | **P1** | ✅ En producción — Gmail OAuth2 |
 | CU-07 | **Atención en quechua (runasimi)** — el agente detecta el idioma y responde completamente en quechua | **P1** | ✅ En producción |
 | CU-08 | **Derivación cordial en aymara** — el agente responde un mensaje único en aymara con teléfono de contacto | **P2** | ✅ En producción |
 | CU-09 | **Descarga del formulario oficial SAIP** — action chip post-DP-002 que abre el PDF del SUT en pestaña nueva; respuesta del agente con enlace si se pide por lenguaje natural | **P1** | ✅ En producción |
@@ -73,7 +73,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 1. **Interfaz única de chat** (pantalla completa, mobile-first) — sin formularios manuales ni vistas separadas.
 2. **Agente conversacional** (Claude Haiku 4.5) que entiende lenguaje natural en **español y quechua** y decide qué herramienta usar:
    - **Tool A — `consultar_expediente`**: llama a la API real del DP con `expediente` + `clave`; convierte la fecha de UTC a hora de Lima.
-   - **Tool B — `enviar_resultado_por_correo`**: envía al ciudadano el resumen del expediente al correo que indique (hoy es **stub**; falta integración con Resend).
+   - **Tool B — `enviar_resultado_por_correo`**: envía al ciudadano el resumen del expediente al correo que indique. Integrada con Gmail API vía OAuth2 (refresh token). Disponible como chip "Envíamelo por correo" tras entregar el resultado del expediente.
    - *Base de conocimiento TUPA*: incrustada en el system prompt (3 trámites: DP-001, DP-002, DP-003). No requiere tool dedicada.
 3. **Respuestas con formato estructurado**: el agente usa plantillas markdown con etiquetas en negrita para entregar estado de expediente y datos de trámites; el front las renderiza con `react-markdown`.
 4. **Chips contextuales**: al final de respuestas relevantes el agente sugiere 2-4 acciones rápidas (`[CHIPS: …]`) que el front pinta como pills clickables.
@@ -141,7 +141,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | Agente | **Claude (Anthropic) vía `@anthropic-ai/sdk`** + tool use | Orquesta las 3 tools por lenguaje natural. |
 | API de expedientes | API REST provista por el DP (`POST https://www.presidencia.gob.pe/api/consulta-expedientes/index.php`) | Fuente de verdad del estado del expediente. |
 | Base de conocimiento TUPA | JSON versionado en el repo (`frontend/src/data/tupa.json`) | Versionable por PR; importable directo como módulo en Node. |
-| Envío de correo | Servicio transaccional (ej. Resend) — definido por el colaborador | Endpoint simple, soporta dominios verificados. |
+| Envío de correo | **Gmail API** vía OAuth2 (refresh token) — `@/api/email` en Node.js | Cero dependencias externas adicionales; autenticación con cuenta Gmail del DP. |
 | Observabilidad | Vercel Analytics + logs de Vercel Functions | Incluido en la plataforma. |
 
 ### Diagrama lógico
@@ -210,8 +210,10 @@ Response 200 (no-streaming, MVP):
 
 - `ANTHROPIC_API_KEY` — API key de Claude.
 - `DP_API_BASE_URL` — URL de la API del DP (con default).
-- `RESEND_API_KEY` (o equivalente) — para envío de correo.
-- `EMAIL_FROM` — dirección remitente verificada.
+- `GMAIL_CLIENT_ID` — OAuth2 client ID de Google Cloud.
+- `GMAIL_CLIENT_SECRET` — OAuth2 client secret de Google Cloud.
+- `GMAIL_REFRESH_TOKEN` — refresh token de la cuenta remitente.
+- `EMAIL_FROM` — dirección Gmail remitente: `Asistente de Despacho Presidencial <asistente.de.despacho.hackaton@gmail.com>`.
 - `RATE_LIMIT_PER_MIN` — default 30.
 
 ---
@@ -224,7 +226,7 @@ Response 200 (no-streaming, MVP):
 2. Escribe en lenguaje natural: *"quiero ver el estado de mi expediente"*.
 3. El agente le pide número de expediente y clave (uno por uno, conversación natural).
 4. El agente llama a la tool `consultar_expediente` y devuelve: estado, administrado, trámite, detalle, tiempo estimado y fecha de última actualización en lenguaje claro.
-5. El agente ofrece: *"¿Quieres que te envíe este resultado por correo?"* → si el ciudadano acepta, pide el correo y llama a `enviar_resultado_por_correo`.
+5. Aparece el chip **"Envíamelo por correo"** como primera acción sugerida. Si el ciudadano lo toca (o lo pide por texto), el agente solicita su dirección de correo y llama a `enviar_resultado_por_correo` via Gmail API.
 
 ### Flujo de TUPA (CU-03)
 
@@ -257,7 +259,7 @@ Response 200 (no-streaming, MVP):
 | Conversión UTC → Lima en la tool | +33 h | Fechas humanas en hora local. | Front | ✅ Hecho |
 | Deploy en Vercel + variables de entorno + iframe embed | +34 h | URL pública demo-able. | Front | ✅ Hecho |
 | QA accesibilidad + responsive + pulido visual | +42 h | WCAG AA, mobile OK. | Front | ✅ Hecho |
-| Endpoint `/api/email` con Resend (envío real) | +44 h | CU-06 con envío end-to-end. | **Colaborador** | 🟡 Pendiente |
+| Endpoint `/api/email` con Gmail OAuth2 (envío real) | +44 h | CU-06 con envío end-to-end. | **Colaborador** | ✅ Hecho |
 | Demo + pitch + modelo de negocio | +48 h | Presentación final. | Equipo completo | ⏳ En preparación |
 
 ---
@@ -311,13 +313,14 @@ Response 200 (no-streaming, MVP):
 | Atención en quechua | CU-07 | "Allillanchu, willachikuyniyta munani". |
 | Derivación en aymara | CU-08 | "Kamisaraki, yanapt'asitaxa". |
 | Chips contextuales | — | Visible al iniciar y después de cada respuesta estructurada. |
+| Chip "Envíamelo por correo" | CU-06 | Aparece tras entregar estado de expediente; dispara envío real via Gmail. |
+| Envío de resultado por correo | CU-06 | Pedir el correo tras click en chip o solicitud por texto, luego confirmar envío. |
 | Markdown en burbujas | — | Las respuestas tipo expediente y TUPA llegan formateadas. |
 | Fechas en hora Lima | — | "Última actualización: hoy a las 12:53". |
 
 **Limitaciones conocidas para producción real** (cubiertas en [`ARCHITECTURE.md §6`](./ARCHITECTURE.md), [`AGENT.md §9`](./AGENT.md) y [`API.md`](./API.md)):
 
-1. **Envío de correo es stub**: el agente dice que envió el correo, pero `enviar_resultado_por_correo` solo loguea. Falta integración con Resend.
-2. **Sin rate limiting**: `/api/chat` no tiene protección contra abuso.
-3. **Sin persistencia de historial**: si el ciudadano recarga la página, pierde la conversación.
-4. **`frame-ancestors *`** demasiado abierto; restringir a `*.gob.pe` antes de pasar a producción.
-5. **Sin tests automatizados**: las pruebas son manuales hoy.
+1. **Sin rate limiting**: `/api/chat` no tiene protección contra abuso.
+2. **Sin persistencia de historial**: si el ciudadano recarga la página, pierde la conversación.
+3. **`frame-ancestors *`** demasiado abierto; restringir a `*.gob.pe` antes de pasar a producción.
+4. **Sin tests automatizados**: las pruebas son manuales hoy.
