@@ -60,6 +60,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | CU-07 | **Atención en quechua (runasimi)** — el agente detecta el idioma y responde completamente en quechua | **P1** | ✅ En producción |
 | CU-08 | **Derivación cordial en aymara** — el agente responde un mensaje único en aymara con teléfono de contacto | **P2** | ✅ En producción |
 | CU-09 | **Descarga del formulario oficial SAIP** — action chip post-DP-002 que abre el PDF del SUT en pestaña nueva; respuesta del agente con enlace si se pide por lenguaje natural | **P1** | ✅ En producción |
+| CU-10 | **Entrada por voz** — el ciudadano graba un mensaje, ve la transcripción aparecer en vivo en el textarea, revisa, edita y envía manualmente | **P1** | 📋 Planificado fase 2 — diseño técnico cerrado |
 
 > **Fuera de alcance del MVP:** WhatsApp, app móvil nativa, login con cuenta gob.pe, descarga de constancias firmadas, historial cronológico de eventos (la API del DP no lo provee), compartir resultado vía link público (CU-05 descartado), notificaciones push o suscripción a cambios de estado.
 
@@ -83,6 +84,17 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 9. **Accesibilidad AA**: contraste, tamaños de texto, navegación por teclado, lector de pantalla (`role="log"`, `aria-live`).
 10. **Responsive mobile-first** + funcionamiento en 3G + respeto del safe-area-inset-bottom para iPhone (gesture bar).
 11. **Embed por iframe** habilitado (`frame-ancestors *`) para incrustar en otros sitios del Estado.
+
+### Planificado para fase 2 (diseño técnico cerrado, no implementado en MVP)
+
+- **Entrada por voz (CU-10)**: el ciudadano puede tocar un botón de micrófono junto al input de texto, dictar su mensaje, ver la transcripción aparecer en vivo (interim + final), editar si quiere y enviar con el botón Enviar existente. Implementación prevista:
+  - **Web Speech API** del navegador (`SpeechRecognition` / `webkitSpeechRecognition`) — cero costo de infraestructura, cero envío de audio a terceros, dispara el permiso nativo del SO. Locale `es-PE`.
+  - Modo **toggle** (click empieza, otro click detiene) — mejor en mobile que push-to-talk.
+  - **Envío manual** post-transcripción — el ciudadano revisa antes de enviar. Crítico para números de expediente y claves donde el reconocimiento de voz suele equivocarse.
+  - **Quechua queda fuera** por limitación de la Web Speech API (no soportado). El botón sigue visible y el ciudadano puede editar la transcripción a mano.
+  - **Fallback**: feature detect en mount. Browsers sin soporte (Firefox, viejos) ocultan el botón sin romper el chat.
+  - **Cero cambios en backend**: el agente sigue recibiendo texto plano. Es un adapter de input puro.
+  - Archivos a tocar cuando se implemente: nuevo hook `frontend/src/hooks/useSpeechRecognition.ts`, botón mic en `frontend/src/components/Chat.tsx`, animación de pulse en `frontend/src/app/globals.css`. Estimación: ~80 min de implementación.
 
 ### Out-of-Scope (MVP)
 
@@ -280,7 +292,7 @@ Response 200 (no-streaming, MVP):
 ## 12. Post-hackatón
 
 - Pruebas con usuarios reales coordinadas por el lab del DP.
-- Iteración 2: integrar Resend para envío real de correo (CU-06 completo), streaming de respuestas con Server-Sent Events, autenticación con cuenta gob.pe, notificaciones por correo de cambios de estado, restringir `frame-ancestors` a dominios `*.gob.pe`.
+- Iteración 2: integrar Resend para envío real de correo (CU-06 completo), **implementar la entrada por voz (CU-10) ya diseñada en fase 1 con Web Speech API** — nativa del navegador, sin costo de infraestructura, habilita atención a adultos mayores y ciudadanos en contextos donde tipear es difícil; cero cambios en el backend ni en el agente, streaming de respuestas con Server-Sent Events, autenticación con cuenta gob.pe, notificaciones por correo de cambios de estado, restringir `frame-ancestors` a dominios `*.gob.pe`.
 - Iteración 3: rate limiting (Upstash Redis), observabilidad custom (eventos por turno y por tool), replicar la plataforma para otras entidades del Estado (kit reutilizable con agente y tools intercambiables), soporte de más lenguas originarias.
 
 ---
