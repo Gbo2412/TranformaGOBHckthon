@@ -223,7 +223,7 @@ Algunos chips representan **acciones directas** (abrir un enlace, descargar un a
 
 | Etiqueta | Acción | URL |
 |---|---|---|
-| `⬇ Descargar el formulario` | Abre el PDF oficial del formulario SAIP en pestaña nueva | http://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf |
+| `⬇ Descargar el formulario` | Abre el PDF oficial del formulario SAIP en pestaña nueva | https://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf |
 
 **Implementación**: mapa `CHIP_ACTIONS` en `frontend/src/components/Chat.tsx`. Para agregar más action chips, sumar entrada al mapa (sin tocar `ChipsRow` ni el endpoint).
 

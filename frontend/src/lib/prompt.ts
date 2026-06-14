@@ -191,7 +191,7 @@ Si el ciudadano pide el formulario por LENGUAJE NATURAL (ej. "dame el formulario
 
 **Formulario oficial de Solicitud de Acceso a la Información Pública**
 
-[Descargar el formulario](http://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf)
+[Descargar el formulario](https://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf)
 
 Imprímelo, complétalo y preséntalo por:
 - Correo: accesoinf@presidencia.gob.pe (gratuito)

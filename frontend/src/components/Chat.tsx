@@ -25,7 +25,7 @@ const WELCOME_CHIPS = [
 // Al clickear, el front abre la URL en una pestaña nueva.
 const CHIP_ACTIONS: Record<string, string> = {
   "⬇ Descargar el formulario":
-    "http://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf",
+    "https://sut.pcm.gob.pe/sutArchivos/file_12329_20200330_214525.pdf",
 };
 
 const WELCOME: Message = {
