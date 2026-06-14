@@ -1,8 +1,10 @@
 # Sistema Visual y Accesibilidad — Asistente DP
 
-**Versión 2.0 · 2026-06-13**
+**Versión 2.1 · 2026-06-13**
 Basado en PRD v3.0 (chat-only) y en la paleta oficial del Sistema de Diseño del Estado Peruano ([gob.pe](https://guias.servicios.gob.pe/creacion-servicios-digitales/estilos/colores)).
 
+> **Changelog v2.1:** Documenta el pulido visual del PR `feat/look-feel-pro`: header con backdrop-blur + elev-bar, avatar con ring institucional, burbujas con elevación sutil, chips con lift en hover + scale en active, botón Enviar con press feedback, input con focus ring expandido, sistema de animación (`msg-enter`, `typing-pulse`) y sistema de elevación de 3 niveles. Nuevas secciones §5.2b (avatar en burbuja), §5.11 (action chips), §5.12 (elevación), §5.13 (animación), §5.14 (tipografía refinada). Incluye footer con safe-area-inset-bottom (iPhone gesture bar).
+>
 > **Changelog v2.0:** Documenta lo que efectivamente está en producción. Agregadas §5.9 (chips contextuales) y §5.10 (markdown rendering). §8 matriz de estados actualizada al comportamiento real. §9 marcado como completado.
 
 ---
@@ -139,46 +141,64 @@ Cuando el agente reporta el estado, el badge se colorea así (presentado en el t
 
 ### 5.1 Header
 
-- **Estructura**: avatar (32px) + grupo `(eyebrow "DESPACHO PRESIDENCIAL" + título "Asistente de expedientes")`.
-- **Color**: fondo blanco con borde inferior `border-default` 1px. **No usamos rojo lleno** porque pesa visualmente sobre un chat largo — el rojo aparece solo en el avatar.
-- **Comportamiento**: sticky top, no se oculta al scrollear (anchor de identidad).
+- **Estructura**: avatar (40px) + grupo `(eyebrow "DESPACHO PRESIDENCIAL" + título "Asistente de expedientes")`.
+- **Color**: fondo `surface-card/95` con `backdrop-blur` y sombra de barra `.elev-bar` (ver §5.13). El rojo institucional aparece solo en el avatar — no como fondo lleno.
+- **Avatar**: círculo `brand-700` con monograma "DP" + `ring-1 ring-brand-800/20` (microhalo institucional).
+- **Eyebrow**: `text-[11px]` semibold uppercase + `tracking-[0.08em]` — más editorial que `text-xs` plano.
+- **Comportamiento**: sticky top, no se oculta al scrollear (anchor de identidad). Al hacer scroll el contenido pasa por debajo de la barra translúcida.
 
 ### 5.2 Burbuja del asistente
 
-- Texto en `text-base` (16px), `text-primary`.
+- Texto en `text-base` (16px), `text-primary`, `leading-relaxed` para respiración.
 - Soporte de salto de línea (`whitespace-pre-wrap`).
+- **Elevación**: `.elev-1` (sombra muy sutil) en lugar de `shadow-sm` plano. Las burbujas "respiran" sobre el fondo sin saturarse.
+- **Entrada animada**: cada burbuja monta con la clase `.msg-enter` (ver §5.14).
 - Si contiene un **estado de expediente**, renderizar con badge inline coloreado según §2.3.
 - Si contiene una **dirección o correo**, hacerlo `<a>` con focus ring.
+
+### 5.2b Avatar del asistente (en burbuja)
+
+- Círculo 32px, `bg-brand-700` + `ring-1 ring-brand-800/20`.
+- Mismo microhalo institucional que el avatar del header.
+- Render condicional: aparece solo en el primer mensaje de cada secuencia consecutiva del asistente (evita ruido visual).
 
 ### 5.3 Burbuja del usuario
 
 - Texto blanco sobre `accent-user`. Probado: ratio 7.2:1 (AAA).
 
-### 5.4 Quick reply chips (turn 1)
+### 5.4 Quick reply chips (turn 1) y chips contextuales
 
-- Pills horizontales, `surface-muted` por default, `border-default` 1px.
-- Hover: borde `brand-700`, texto `brand-700`.
-- Focus: anillo `focus-ring`, 3px, offset 2px.
-- Altura mínima: 36px en desktop, **44px en móvil** (área de toque accesible).
-- Texto sugerido para el turn 1:
-  - "Consultar mi expediente"
-  - "Requisitos de una Solicitud Simple"
-  - "Horarios de mesa de partes"
+- Pills horizontales, fondo `bg-surface-card` (blanco) sobre el fondo claro de la página — se ven como piezas físicas, no como botones embebidos.
+- Borde `border-line` 1px.
+- **Hover**: `-translate-y-px` + `hover:shadow-sm` + borde y texto pasan a `brand-700`. Sensación táctil de "se levanta".
+- **Active**: `scale-[0.98]` para press feedback inmediato.
+- **Transición**: 150ms en `all` para que ambas micro-interacciones se sientan fluidas.
+- **Focus**: anillo `focus-ring`, 3px, offset 2px.
+- **Tamaño**: `min-h-[44px]` siempre (área de toque accesible en móvil y desktop).
+- Texto del turn 1 (`WELCOME_CHIPS`):
+  - "Consultar el estado de un expediente"
+  - "Conocer sobre un trámite"
+  - "Otra consulta sobre el Despacho Presidencial"
 
 ### 5.5 Indicador "el asistente está escribiendo"
 
-- Tres puntos animados (`animate-bounce` con delays 0s, 0.15s, 0.3s) dentro de una burbuja del asistente vacía.
-- Etiqueta accesible: `aria-label="El asistente está escribiendo"` en el contenedor.
+- Tres dots pequeños (`h-1.5 w-1.5`) dentro de una burbuja del asistente vacía con `.elev-1`.
+- Animación `.typing-pulse` (escala + opacidad) con delays 0s · 0.15s · 0.3s. Más elegante que el `animate-bounce` anterior — estilo iMessage / Linear / Claude.app.
+- Etiqueta accesible: `aria-label="El asistente está escribiendo"` en el contenedor + `aria-live="polite"`.
 - Tiempo máximo visible antes de timeout: 30s.
+- Respeta `prefers-reduced-motion` (la animación se desactiva).
 
 ### 5.6 Input bar
 
+- **Container**: fondo `surface-card/95` con `backdrop-blur` y `pb-[max(0.75rem,env(safe-area-inset-bottom))]` para respetar la home indicator de iPhone (gesture bar).
 - **Textarea autoexpansible** (max 4 líneas, después scroll interno).
 - Placeholder: "Escríbele al asistente…"
+- **Focus del textarea**: borde pasa a `accent-user` + halo suave `ring-4 ring-accent-user/15`. Transición 150ms — focus visible y elegante, no agresivo.
 - **Botón Enviar**:
-  - Estado normal: fondo `accent-user`, texto blanco, `rounded-full`, 44×44px en móvil.
-  - Disabled (input vacío o cargando): opacity 50%, cursor not-allowed.
-  - Icon-only en móviles (≤640px) — `aria-label="Enviar mensaje"`.
+  - Estado normal: fondo `accent-user`, texto blanco, `rounded-full`, 44×44px (h-11).
+  - **Active**: `scale-[0.97]` — press feedback uniforme con los chips.
+  - Disabled (input vacío o cargando): opacity 50%, cursor not-allowed, sin scale.
+  - `aria-label="Enviar mensaje"`.
 - **Tecla Enter** envía; **Shift+Enter** hace salto de línea.
 - **Disclaimer debajo**: "No compartas datos personales más allá de los necesarios para tu consulta." — `text-xs`, `text-muted`.
 
@@ -203,6 +223,43 @@ Cuando el agente confirma envío exitoso, se muestra una **burbuja sistema** cen
 
 - Fondo `success` al 10% (#E3F3EC), texto `success`, borde 1px del mismo color.
 - Ícono de check (SVG inline, no librería).
+
+### 5.11 Action chips (chips de acción directa)
+
+Chips que el frontend intercepta y resuelve **sin pasar por el agente**: el ciudadano hace click, el front abre la URL en una pestaña nueva, y la conversación no se interrumpe. Cero round-trip con el modelo, cero tokens, cero latencia.
+
+**Implementación**: mapa `CHIP_ACTIONS` en `frontend/src/components/Chat.tsx`. Detallado en [`AGENT.md §6`](./AGENT.md#action-chips-interceptados-por-el-front).
+
+**Caso vivo hoy**: `⬇ Descargar el formulario` después de la plantilla DP-002 (SAIP). Abre el PDF del SUT en pestaña nueva.
+
+**Visual**: idéntico al resto de chips contextuales (§5.4) — el ciudadano no necesita distinguir visualmente entre conversacional y acción directa. La diferencia está solo en el comportamiento del click.
+
+### 5.12 Sistema de elevación
+
+Tres niveles de sombras institucionales muy sutiles, definidas como CSS variables y expuestas como utilidades en `globals.css`:
+
+| Token | Variable | Utilidad | Uso |
+|---|---|---|---|
+| Elevation 1 | `--shadow-elev-1` | `.elev-1` | Burbujas (asistente, usuario), typing bubble. Da "respiración" sobre el fondo. |
+| Elevation 2 | `--shadow-elev-2` | `.elev-2` | (Reservado para modales o cards destacados — no en uso hoy.) |
+| Bar | `--shadow-bar` | `.elev-bar` | Header sticky. Profundidad sutil al hacer scroll sin saturar. |
+
+Las sombras combinan dos capas (offset 1-4px + radio 12-16px) y usan `rgba(13, 16, 40, 0.04–0.08)` para mantenerse neutras y respetar el color base de la página.
+
+### 5.13 Sistema de animación
+
+Animaciones de UI definidas en `globals.css` como keyframes nombradas. Todas respetan `prefers-reduced-motion` (se desactivan automáticamente).
+
+| Animación | Cuándo | Detalle |
+|---|---|---|
+| `msg-enter` | Cada burbuja nueva (usuario, asistente, sistema), typing bubble, ChipsRow. | Slide-up 6px + fade en 240ms con curva `cubic-bezier(0.2, 0.7, 0.2, 1)`. Aplicada con la clase `.msg-enter`. |
+| `typing-pulse` | Los 3 dots del indicador "escribiendo". | Pulse de opacidad (0.25 → 1 → 0.25) + escala (0.85 → 1 → 0.85) en 1.2s ease-in-out infinite. Reemplaza al `animate-bounce` anterior. |
+
+Las micro-interacciones de hover/active (chips, botón Enviar) usan transiciones Tailwind inline (`transition-all duration-150` + `active:scale-[0.97]` o `[0.98]`) y no requieren keyframes propias.
+
+### 5.14 Tipografía refinada
+
+Inter cargada con `next/font/google` + `font-feature-settings: "cv11", "ss01", "ss02", "cv01", "cv02"` y `text-rendering: optimizeLegibility` en `body`. Activa estilos contextuales de Inter para mejor kerning y formas alternativas en peso semibold y signos. Pequeño cambio, gran ganancia visual.
 
 ---
 

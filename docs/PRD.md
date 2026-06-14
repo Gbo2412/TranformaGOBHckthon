@@ -59,6 +59,7 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
 | CU-06 | **Recibir el resultado de la consulta por correo electrónico** (a pedido explícito del ciudadano) | **P1** | 🟡 Parcial — UI y agente listos; envío real pendiente Resend |
 | CU-07 | **Atención en quechua (runasimi)** — el agente detecta el idioma y responde completamente en quechua | **P1** | ✅ En producción |
 | CU-08 | **Derivación cordial en aymara** — el agente responde un mensaje único en aymara con teléfono de contacto | **P2** | ✅ En producción |
+| CU-09 | **Descarga del formulario oficial SAIP** — action chip post-DP-002 que abre el PDF del SUT en pestaña nueva; respuesta del agente con enlace si se pide por lenguaje natural | **P1** | ✅ En producción |
 
 > **Fuera de alcance del MVP:** WhatsApp, app móvil nativa, login con cuenta gob.pe, descarga de constancias firmadas, historial cronológico de eventos (la API del DP no lo provee), compartir resultado vía link público (CU-05 descartado), notificaciones push o suscripción a cambios de estado.
 
@@ -75,11 +76,13 @@ Demostrar que un ciudadano puede, en **menos de 60 segundos** y desde su celular
    - *Base de conocimiento TUPA*: incrustada en el system prompt (3 trámites: DP-001, DP-002, DP-003). No requiere tool dedicada.
 3. **Respuestas con formato estructurado**: el agente usa plantillas markdown con etiquetas en negrita para entregar estado de expediente y datos de trámites; el front las renderiza con `react-markdown`.
 4. **Chips contextuales**: al final de respuestas relevantes el agente sugiere 2-4 acciones rápidas (`[CHIPS: …]`) que el front pinta como pills clickables.
-5. **Detección de idioma** (quechua/español/aymara) por heurística embebida en el prompt.
-6. **Manejo de errores conversacional**: cuando una tool falla (404, 401, 502, correo inválido), el agente responde con un mensaje humano y propone siguiente paso.
-7. **Accesibilidad AA**: contraste, tamaños de texto, navegación por teclado, lector de pantalla (`role="log"`, `aria-live`).
-8. **Responsive mobile-first** + funcionamiento en 3G.
-9. **Embed por iframe** habilitado (`frame-ancestors *`) para incrustar en otros sitios del Estado.
+5. **Action chips (chips de acción directa)**: subconjunto de chips que el frontend intercepta y resuelve sin pasar por el agente. El primer caso vivo es `⬇ Descargar el formulario` después de DP-002 (SAIP), que abre el formulario oficial alojado en el SUT de la PCM en una pestaña nueva. Cero tokens, cero latencia, sin depender de la disponibilidad de la API del agente.
+6. **Entrega del formulario oficial SAIP**: dos caminos paralelos — (a) action chip post-plantilla de DP-002; (b) si el ciudadano lo pide por lenguaje natural ("dame el formulario"), el agente responde con un bloque markdown con el enlace + canales de presentación (correo `accesoinf@presidencia.gob.pe`, presencial en Mesa de Partes).
+7. **Detección de idioma** (quechua/español/aymara) por heurística embebida en el prompt.
+8. **Manejo de errores conversacional**: cuando una tool falla (404, 401, 502, correo inválido), el agente responde con un mensaje humano y propone siguiente paso.
+9. **Accesibilidad AA**: contraste, tamaños de texto, navegación por teclado, lector de pantalla (`role="log"`, `aria-live`).
+10. **Responsive mobile-first** + funcionamiento en 3G + respeto del safe-area-inset-bottom para iPhone (gesture bar).
+11. **Embed por iframe** habilitado (`frame-ancestors *`) para incrustar en otros sitios del Estado.
 
 ### Out-of-Scope (MVP)
 
