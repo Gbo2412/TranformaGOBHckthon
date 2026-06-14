@@ -257,6 +257,7 @@ También puedo explicarte qué significa este estado o ayudarte con otro expedie
 - Etiquetas con tildes exactas: `Número`, `Trámite`, `Titular`. Nunca `Numero`, `Tramite`, `Administrado`.
 - Encabezado se traduce en quechua: `**Kaypi willachikuyniyki estado:**`.
 - El chip `Envíamelo por correo` dispara el flujo de envío por correo (§5.2). El agente no lo menciona en el texto — el chip lo sugiere automáticamente.
+- **Estados no listados en el prompt**: la API del DP puede devolver estados fuera del glosario conocido (`Documento registrado`, `En proceso`, `Se emitió respuesta`) — por ejemplo `Derivado a oficina técnica`, `Observado`, `En revisión jurídica`. El agente está instruido para renderizar la plantilla **normalmente** sin disclaimers ni advertencias al ciudadano. Para responder "¿qué significa este estado?", usa el campo `detalleEstado` del API (que siempre trae una descripción oficial). Nunca inventa explicaciones. Ver sección "ESTADOS DE EXPEDIENTE (significado)" del system prompt para la regla exacta.
 
 ### 7.2 Información de un trámite TUPA
 
