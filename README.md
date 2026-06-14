@@ -59,4 +59,5 @@ Distribuido bajo licencia **MIT** — ver [`LICENSE`](./LICENSE). Alineado con e
 
 ## Equipo
 
-OGTIC DP — Despacho Presidencial. Punto focal: German Canaza Torres.
+Gabriel Fretel Santivañez - https://www.linkedin.com/in/gabriel-victor-fretel/
+Rodrigo Canahuire Cama - https://www.linkedin.com/in/rodrigocanahuirecama/
