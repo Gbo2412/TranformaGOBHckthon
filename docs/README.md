@@ -10,7 +10,8 @@ Toda esta documentación refleja **el estado actual de `main`**. Está pensada p
 
 | Documento | Para… |
 |---|---|
-| [PRD.md](./PRD.md) | Entender el **producto**: qué problema resuelve, casos de uso, métricas y alcance. |
+| [FUNCTIONAL.md](./FUNCTIONAL.md) | **Resumen ejecutivo funcional**: problema, flujos principales, accesibilidad (quechua), arquitectura e impacto. Empieza aquí si eres jurado o stakeholder. |
+| [PRD.md](./PRD.md) | Entender el **producto**: qué problema resuelve, casos de uso, métricas, estado actual del MVP. |
 | [DESIGN.md](./DESIGN.md) | El **sistema visual**: paleta gob.pe, tipografía, componentes, accesibilidad AA. |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | La **topología técnica**: stack, decisiones, estructura de carpetas, flujos. |
 | [AGENT.md](./AGENT.md) | El **comportamiento del agente**: prompt, tools, idiomas, chips, plantillas. |
@@ -42,7 +43,7 @@ Toda esta documentación refleja **el estado actual de `main`**. Está pensada p
 | Chat UI (Next.js + Tailwind + Inter) | ✅ En producción |
 | Agente Claude Haiku 4.5 + tool use | ✅ En producción |
 | Tool `consultar_expediente` (vs API DP real) | ✅ En producción |
-| Tool `enviar_resultado_por_correo` | 🟡 Stub (falta Resend) |
+| Tool `enviar_resultado_por_correo` (Gmail OAuth2) | ✅ En producción |
 | Idioma quechua (runasimi) | ✅ En producción |
 | Idioma aymara (derivación) | ✅ En producción |
 | Chips contextuales | ✅ En producción |

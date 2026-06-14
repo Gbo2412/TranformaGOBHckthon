@@ -48,7 +48,7 @@ proyecto/
 - **Hosting:** Vercel (despliegue continuo desde `main`)
 - **Framework:** Next.js 14 (App Router) + TypeScript + Tailwind CSS + Inter
 - **Agente:** Claude Haiku 4.5 vía `@anthropic-ai/sdk` con tool use
-- **Tools:** `consultar_expediente` (API real DP), `enviar_resultado_por_correo` (stub Resend pendiente)
+- **Tools:** `consultar_expediente` (API real DP), `enviar_resultado_por_correo` (Gmail OAuth2 — `asistente.de.despacho.hackaton@gmail.com`)
 - **Renderizado conversacional:** `react-markdown` + `remark-breaks` + chips contextuales
 
 El núcleo es agnóstico al modelo: hoy usamos Claude Haiku 4.5, pero es reemplazable por cualquier LLM open source (Llama, Mistral, DeepSeek) sin tocar el núcleo, habilitando despliegue on-prem y soberanía digital.
