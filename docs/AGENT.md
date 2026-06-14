@@ -148,9 +148,9 @@ Traducción aproximada: "Este sistema aún no está habilitado para conversar en
 
 ### 5.2 `enviar_resultado_por_correo`
 
-**Estado actual: STUB.** No envía correo real. Devuelve OK para que el flujo conversacional del agente funcione end-to-end.
+**Estado: ✅ Producción.** Envía correo real via Gmail API (OAuth2 refresh token).
 
-**Cuándo se usa**: SOLO si el ciudadano lo pide explícitamente ("mándamelo al correo"). El prompt prohíbe ofrecerlo proactivamente.
+**Cuándo se usa**: cuando el ciudadano hace click en el chip "Envíamelo por correo" o lo pide explícitamente por texto. El agente no lo menciona en el cuerpo de su respuesta — el chip lo sugiere automáticamente.
 
 **Schema:**
 ```json
@@ -168,12 +168,12 @@ Traducción aproximada: "Este sistema aún no está habilitado para conversar en
 }
 ```
 
-**Comportamiento actual (stub):**
+**Comportamiento:**
 1. Valida formato de email con regex `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`.
 2. Si inválido: devuelve `{ error: "El correo indicado no parece válido..." }`.
-3. Si válido: `console.log` + devuelve `{ ok: true, mensaje: "Correo enviado a ${destinatario}." }`.
+3. Si válido: llama a `POST /api/email` que obtiene un `access_token` fresco de Google y envía via Gmail API. Devuelve `{ ok: true, id }`.
 
-**Trabajo pendiente para producción**: integrar Resend (o equivalente) en `frontend/src/app/api/email/route.ts` y consumir desde la tool.
+**Variables de entorno requeridas en Vercel**: `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `EMAIL_FROM` (`Asistente de Despacho Presidencial <asistente.de.despacho.hackaton@gmail.com>`).
 
 ## 6. Convención de chips
 
@@ -311,7 +311,7 @@ Permite a cualquier ciudadano solicitar información pública que posea el Despa
 3. **Detección de idioma puede fallar** en mensajes muy cortos ("hola" no es señal suficiente). En esos casos cae a español por defecto.
 4. **No hay rate limiting** por IP en `/api/chat` (riesgo de abuso si el chat se hace público viral). Pendiente.
 5. **Costos de tokens**: cada turno incluye el system prompt completo (~3.500 tokens). A escala, conviene usar prompt caching de Anthropic.
-6. **Tool `enviar_resultado_por_correo` es stub**: el agente le dice al ciudadano que envió el correo, pero no llega ningún mail.
+6. **Correo depende de Gmail OAuth2**: si los secrets de Google Cloud caducan o se revocan, el envío falla con error 502. Monitorear `GMAIL_REFRESH_TOKEN` en producción.
 
 ## 10. Anti-prompt-injection
 

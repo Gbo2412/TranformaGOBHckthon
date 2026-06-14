@@ -92,6 +92,16 @@ Asistente:   Aquí está el estado de tu expediente:
              [Envíamelo por correo]
              [¿Qué significa este estado?]
              [Consultar otro expediente]
+
+Ciudadano:   [toca el chip "Envíamelo por correo"]
+
+Asistente:   Para enviarte el resumen por correo,
+             necesito tu dirección de email. ¿Cuál es?
+
+Ciudadano:   "rosa.quispe@gmail.com"
+
+Asistente:   Listo, te envié el resumen a
+             rosa.quispe@gmail.com.
 ```
 
 El agente llama a la API oficial del DP en tiempo real. La fecha se convierte automáticamente de UTC a hora de Lima antes de mostrarse. Los errores (expediente inexistente, clave incorrecta, sistema caído) se comunican en lenguaje humano, nunca con códigos.
@@ -216,12 +226,12 @@ El ciudadano escribe desde su celular
     Agente conversacional
     (Claude Haiku 4.5)
             │
-     ┌──────┴──────┐
-     ▼             ▼
-  Consulta      Base de
-  expediente    conocimiento
-  (API real     (TUPA con
-   del DP)       3 trámites)
+     ┌──────┴──────┬──────────────────┐
+     ▼             ▼                  ▼
+  Consulta      Base de           Envío de
+  expediente    conocimiento      correo
+  (API real     (TUPA con         (Gmail API
+   del DP)       3 trámites)       OAuth2)
      │
      ▼
   Respuesta en lenguaje natural
@@ -282,13 +292,14 @@ El modelo de lenguaje también es intercambiable: hoy usa Claude Haiku 4.5 por s
 | Descarga del formulario SAIP | ✅ En producción | Chip "⬇ Descargar el formulario" tras consultar DP-002 |
 | Embed por iframe en otros sitios | ✅ En producción | `<iframe src="https://tranforma-gob-hckthon.vercel.app">` |
 | Manejo de errores en lenguaje humano | ✅ En producción | Clave incorrecta, expediente inexistente |
+| Chip "Envíamelo por correo" tras resultado | ✅ En producción | Aparece automáticamente tras consultar expediente |
+| Envío de correo real (Gmail OAuth2) | ✅ En producción | Remitente: `asistente.de.despacho.hackaton@gmail.com` |
 | Accesibilidad WCAG 2.1 AA | ✅ En producción | Navegación por teclado, lector de pantalla |
 
 **Pendiente para producción real:**
 
 | Tarea | Impacto |
 |---|---|
-| Integración Resend (envío de correo real) | Completar CU-06 |
 | Rate limiting en `/api/chat` | Protección contra abuso a escala |
 | Restringir `frame-ancestors` a `*.gob.pe` | CSP correcto para sitios del Estado |
 
@@ -323,7 +334,6 @@ El modelo de lenguaje también es intercambiable: hoy usa Claude Haiku 4.5 por s
 ## 9. Hoja de ruta
 
 **Inmediato (post-hackatón, primer mes)**
-- Integración de envío de correo real (Resend)
 - Rate limiting básico por IP
 - Restricción de iframe a `*.gob.pe`
 - Dominio personalizado: `asistente.presidencia.gob.pe`
