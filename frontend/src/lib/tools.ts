@@ -3,6 +3,11 @@ import type Anthropic from "@anthropic-ai/sdk";
 const DP_API_URL =
   process.env.DP_API_BASE_URL ??
   "https://www.presidencia.gob.pe/api/consulta-expedientes/index.php";
+const EMAIL_API_URL =
+  process.env.EMAIL_API_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}/api/email`
+    : "http://localhost:3000/api/email");
 
 export const TOOLS: Anthropic.Tool[] = [
   {
@@ -144,14 +149,27 @@ async function enviarResultadoPorCorreo(
   if (!correoValido(destinatario)) {
     return { error: "El correo indicado no parece válido. Pídele al ciudadano que lo verifique." };
   }
-  // TODO(colaborador): integrar Resend en /api/email y consumirlo desde aquí.
-  // Por ahora se simula envío exitoso para que el flujo del agente quede armado.
-  console.log("[tool enviar_resultado_por_correo] stub", { destinatario, asunto });
-  return {
-    ok: true,
-    mensaje: `Correo enviado a ${destinatario}.`,
-    cuerpoPreview: cuerpo.slice(0, 60),
-  };
+
+  try {
+    const res = await fetch(EMAIL_API_URL, {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ destinatario, asunto, cuerpo }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return { error: data?.error ?? "No se pudo enviar el correo." };
+    }
+
+    return {
+      ok: true,
+      mensaje: `Correo enviado a ${destinatario}.`,
+      id: data?.id,
+    };
+  } catch {
+    return { error: "Error de conexión al enviar el correo." };
+  }
 }
 
 export async function ejecutarTool(nombre: string, input: unknown): Promise<unknown> {

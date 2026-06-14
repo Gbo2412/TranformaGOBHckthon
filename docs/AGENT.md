@@ -195,7 +195,7 @@ El agente puede sugerir **acciones rápidas** al final de ciertas respuestas, ag
 | Caso | Chips |
 |---|---|
 | Bienvenida (hardcoded en `Chat.tsx`) | `Consultar el estado de un expediente`, `Conocer sobre un trámite`, `Otra consulta sobre el Despacho Presidencial` |
-| Después de entregar estado de expediente | `¿Qué significa este estado?`, `Consultar otro expediente`, `Información de un trámite` |
+| Después de entregar estado de expediente | `Envíamelo por correo`, `¿Qué significa este estado?`, `Consultar otro expediente` |
 | Lista de los 3 trámites (cuando es ambiguo) | `Solicitud Simple`, `SAIP`, `Reclamo`, `Consultar mi expediente` |
 | Después de DP-001 | `Ver SAIP`, `Ver Reclamo`, `Consultar mi expediente` |
 | Después de DP-002 | `⬇ Descargar el formulario` *(action chip — ver abajo)*, `Ver Solicitud Simple`, `Ver Reclamo`, `Consultar mi expediente` |
@@ -250,12 +250,13 @@ Algunos chips representan **acciones directas** (abrir un enlace, descargar un a
 
 También puedo explicarte qué significa este estado o ayudarte con otro expediente.
 
-[CHIPS: ¿Qué significa este estado? | Consultar otro expediente | Información de un trámite]
+[CHIPS: Envíamelo por correo | ¿Qué significa este estado? | Consultar otro expediente]
 ```
 
 **Notas:**
 - Etiquetas con tildes exactas: `Número`, `Trámite`, `Titular`. Nunca `Numero`, `Tramite`, `Administrado`.
 - Encabezado se traduce en quechua: `**Kaypi willachikuyniyki estado:**`.
+- El chip `Envíamelo por correo` dispara el flujo de envío por correo (§5.2). El agente no lo menciona en el texto — el chip lo sugiere automáticamente.
 
 ### 7.2 Información de un trámite TUPA
 
